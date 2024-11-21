@@ -58,3 +58,6 @@ srun python -m src.patchtst_pretrain \
           --trafos=None \
           --model=vanilla_vit \
           --model_name=patch_ecg
+
+
+

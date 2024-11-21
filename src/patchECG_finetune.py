@@ -50,7 +50,7 @@ parser.add_argument('--linear_only', action=argparse.BooleanOptionalAction, defa
 # Dataset and dataloader
 parser.add_argument('--dset_finetune', type=str, default='ptb-xl', help='dataset name')
 parser.add_argument('--root_path', type=str, help='root path for the dataset',
-                    default='/home/student/Datasets/100Hz/ptb-xl_1.0.3')
+                    default='/home/student/GIT/DATASET/ptb-xl_1.0.3')
 parser.add_argument('--reset_strat_folds', action=argparse.BooleanOptionalAction, default=False,
                     help='reset stratification folds if set to true')
 parser.add_argument('--top_n_classes', type=int, default=None,
