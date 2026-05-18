@@ -21,6 +21,7 @@ class ClassificationType(Enum):
     MULTI_LABEL = 1
     BINARY = 2
     PRETRAIN = 3
+    REGRESSION = 4
 
 
 class EcgInterface:

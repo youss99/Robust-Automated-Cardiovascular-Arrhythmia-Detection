@@ -6,6 +6,7 @@ from abc import ABC
 import logging
 from ast import literal_eval
 from collections import Counter
+from typing import TypeVar
 
 import kornia
 import matplotlib.pyplot as plt
@@ -16,12 +17,13 @@ from sklearn.model_selection import StratifiedShuffleSplit
 from skmultilearn.model_selection import IterativeStratification
 from sklearn.preprocessing import LabelEncoder, MultiLabelBinarizer
 from torch.utils.data import Dataset
-from torch.utils.data.dataset import T_co
 
 from src.core.datasets.ecg_interface import Split, EcgInterface, LeadSelection, ClassificationType
 from src.core.constants.definitions import DataAugmentation
 from src.core.support.transforms import transformations_from_strings
 from src.core.utils.basics import _torch, _torch_single
+
+T_co = TypeVar("T_co", covariant=True)
 
 
 class EcgDataset(ABC, Dataset, EcgInterface):
@@ -36,7 +38,8 @@ class EcgDataset(ABC, Dataset, EcgInterface):
                  focal_alpha=0.25, split=Split.TRAIN, custom_class_selection=None,
                  classification_type=ClassificationType.MULTI_LABEL,
                  transformations=None, t_params=None, reset_strat_folds=False,
-                 data_augmentation=DataAugmentation.none, chunk_size=250, chunk_step=125, alt_lead_ordering=False):
+                 data_augmentation=DataAugmentation.none, chunk_size=250, chunk_step=125, alt_lead_ordering=False,
+                 regression_loss='mse'):
         """
         custom_class_selection: This parameter expects a list of class names to be passed in. Allowing the user to
         manually select the classes they wish to include in classification. If the keyword 'Other' is among the names
@@ -71,6 +74,8 @@ class EcgDataset(ABC, Dataset, EcgInterface):
         # Focal loss terms
         self._focal_loss = focal_loss
         self._focal_alpha = focal_alpha
+        self._regression_loss = regression_loss
+        self._regression_target_columns = None
 
         # Test time augmentation
         self._data_augmentation = data_augmentation
@@ -132,6 +137,10 @@ class EcgDataset(ABC, Dataset, EcgInterface):
 
     @property
     def n_classes(self):
+        if self._classification_type == ClassificationType.REGRESSION:
+            if self._n_hot_vector is None:
+                return len(self._custom_lead_selection)
+            return self._n_hot_vector.shape[1] if self._n_hot_vector.ndim > 1 else 1
         if self._label_encoder is None:
             return 0
         if self._classification_type == ClassificationType.BINARY:
@@ -140,6 +149,8 @@ class EcgDataset(ABC, Dataset, EcgInterface):
 
     @property
     def classes(self):
+        if self._classification_type == ClassificationType.REGRESSION:
+            return self._regression_target_columns if self._regression_target_columns is not None else []
         return self._label_encoder.classes_
 
     @property
@@ -274,10 +285,24 @@ class EcgDataset(ABC, Dataset, EcgInterface):
         return self._data_y[train_index].reset_index(drop=True), self._n_hot_vector[train_index]
 
     def get_class_sizes(self):
+        if self._classification_type is ClassificationType.REGRESSION:
+            targets = np.asarray(self._n_hot_vector, dtype=float)
+            if targets.ndim == 1:
+                targets = targets[:, None]
+            target_names = self.classes if len(self.classes) else [f'target_{idx}' for idx in range(targets.shape[1])]
+            return pd.DataFrame({
+                'label': target_names,
+                'count': [targets.shape[0]] * targets.shape[1],
+                'mean': np.nanmean(targets, axis=0),
+                'std': np.nanstd(targets, axis=0),
+                'min': np.nanmin(targets, axis=0),
+                'max': np.nanmax(targets, axis=0),
+            })
         if self._classification_type is ClassificationType.MULTI_LABEL:
             return pd.DataFrame({'label': self._label_encoder.classes_, 'count': self._n_hot_vector.sum(axis=0)})
         else:
-            return pd.DataFrame({'label': self._label_encoder.classes_, 'count': Counter(self._n_hot_vector).values()})
+            counts = [int(np.sum(self._n_hot_vector == index)) for index in range(len(self._label_encoder.classes_))]
+            return pd.DataFrame({'label': self._label_encoder.classes_, 'count': counts})
 
     def plot_classes(self, plot_path):
         """
@@ -288,6 +313,19 @@ class EcgDataset(ABC, Dataset, EcgInterface):
         None
         """
         counts_df = self.get_class_sizes()
+
+        if self._classification_type is ClassificationType.REGRESSION:
+            plt.figure(figsize=(12, 8))
+            plt.bar(x=counts_df['label'], height=counts_df['mean'], yerr=counts_df['std'])
+            plt.title(f"Regression Target Distribution (Split={self._split})", color="black", fontsize=24)
+            plt.tick_params(axis="both", colors="black")
+            plt.xlabel("Target", color="black", fontsize=18)
+            plt.ylabel("Mean target value", color="black", fontsize=18)
+            plt.xticks(rotation=30, ha='right')
+            plt.tight_layout()
+            plt.savefig(f'{plot_path}.png')
+            plt.close()
+            return
 
         plt.figure(figsize=(30, 20))
         plt.bar(x=counts_df['label'], height=counts_df['count'])
@@ -343,6 +381,22 @@ class EcgDataset(ABC, Dataset, EcgInterface):
         This method will return only those labels with more instances than a given threshold. This will then be handled
         in the method for instantiating the multi-hot vector.
         """
+        if n_hot_vector.ndim == 1:
+            class_counts = np.bincount(n_hot_vector, minlength=len(label_encoder.classes_))
+            columns = np.where(class_counts >= self._min_class_size)[0]
+
+            if len(columns) == 0:
+                raise Exception("Could not find any classes meeting the minimum class size threshold.")
+
+            valid_mask = np.isin(n_hot_vector, columns)
+            df_indices = np.where(valid_mask)[0]
+            n_hot_vector = n_hot_vector[df_indices]
+
+            remap = {old_index: new_index for new_index, old_index in enumerate(columns)}
+            n_hot_vector = np.asarray([remap[int(label)] for label in n_hot_vector], dtype=np.int64)
+            label_encoder.classes_ = label_encoder.classes_[columns]
+            return df_indices, n_hot_vector, label_encoder
+
         # Get columns with at least the minimum threshold
         columns = np.where(n_hot_vector.sum(axis=0) >= self._min_class_size)[0]
 
@@ -365,6 +419,12 @@ class EcgDataset(ABC, Dataset, EcgInterface):
             return torch.nn.CrossEntropyLoss(reduction='mean'), torch.float
         elif self._classification_type == ClassificationType.PRETRAIN:
             return torch.nn.MSELoss(reduction='mean'), torch.float
+        elif self._classification_type == ClassificationType.REGRESSION:
+            if self._regression_loss == 'mae':
+                return torch.nn.L1Loss(reduction='mean'), torch.float
+            if self._regression_loss == 'smooth_l1':
+                return torch.nn.SmoothL1Loss(reduction='mean'), torch.float
+            return torch.nn.MSELoss(reduction='mean'), torch.float
         else:
             return torch.nn.BCEWithLogitsLoss(reduction='mean'), torch.float
 
@@ -384,6 +444,9 @@ class EcgDataset(ABC, Dataset, EcgInterface):
         elif self._classification_type == ClassificationType.BINARY:
             self._loss_func, self._label_type = self.get_loss()
             self.__initialize_multi_class__()
+        elif self._classification_type == ClassificationType.REGRESSION:
+            self._loss_func, self._label_type = self.get_loss()
+            self.__initialize_regression__()
 
     def __initialize_multi_class__(self):
         # Select one label from multi-label set
@@ -406,3 +469,45 @@ class EcgDataset(ABC, Dataset, EcgInterface):
             self.preprocess_labeled_data(label_encoder=label_encoder, n_hot_vector=n_hot_vector)
         # Get current data subset: train, validation, test, and the corresponding labels
         self._data_y, self._n_hot_vector = self.get_data_subset_annotated(df_indices)
+
+    def get_regression_target_columns(self):
+        target_cols = [
+            col for col in self._data_y.columns
+            if col != 'target_columns' and (col.startswith('target_') or (col.startswith('target_lead') and col.endswith('_mV')))
+        ]
+        return sorted(target_cols)
+
+    def get_data_subset_regression(self, df_indices):
+        if 'strat_fold_annotated' not in self._data_y.columns or self._reset_strat_folds:
+            indices = np.asarray(df_indices)
+            np.random.shuffle(indices)
+            train_end = round(len(indices) * 0.8)
+            valid_end = round(len(indices) * 0.9)
+            self._data_y['strat_fold_annotated'] = np.nan
+            self._data_y.loc[indices[:train_end], 'strat_fold_annotated'] = Split.TRAIN.value
+            self._data_y.loc[indices[train_end:valid_end], 'strat_fold_annotated'] = Split.VALIDATION.value
+            self._data_y.loc[indices[valid_end:], 'strat_fold_annotated'] = Split.TEST.value
+            self._data_y.to_csv(path_or_buf=self._dataset_path, index=False,
+                                columns=[column for column in self._data_y.columns if column != 'original_index'])
+
+        if self._split == Split.VALIDATION:
+            split_index = self._data_y['strat_fold_annotated'] == Split.VALIDATION.value
+        elif self._split == Split.TEST:
+            split_index = self._data_y['strat_fold_annotated'] == Split.TEST.value
+        else:
+            split_index = self._data_y['strat_fold_annotated'] == Split.TRAIN.value
+        return self._data_y[split_index].reset_index(drop=True), self._n_hot_vector[split_index]
+
+    def __initialize_regression__(self):
+        self._regression_target_columns = self.get_regression_target_columns()
+        if not self._regression_target_columns:
+            raise ValueError("Regression datasets must provide target columns or override get_regression_target_columns().")
+
+        targets = self._data_y[self._regression_target_columns].apply(pd.to_numeric, errors='coerce').to_numpy(dtype=np.float32)
+        valid_mask = ~np.isnan(targets).any(axis=1)
+        if not np.any(valid_mask):
+            raise ValueError("No valid regression targets were found.")
+
+        df_indices = np.where(valid_mask)[0]
+        self._n_hot_vector = targets
+        self._data_y, self._n_hot_vector = self.get_data_subset_regression(df_indices)
