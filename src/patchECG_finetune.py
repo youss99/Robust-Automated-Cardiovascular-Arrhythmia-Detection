@@ -2,7 +2,9 @@
 import functools
 import os
 import pathlib
+import random
 
+import numpy as np
 import pandas as pd
 import peft
 
@@ -116,6 +118,8 @@ parser.add_argument('--focal_loss', action=argparse.BooleanOptionalAction, defau
                     help='Focal loss only applies to binary and multi-label classification')
 parser.add_argument('--focal_alpha', type=float, default=None,
                     help='Value between 0 and 1. Defines the strength of the focal loss term.')
+parser.add_argument('--regression_loss', type=str, choices=['mse', 'mae', 'smooth_l1'], default='mse',
+                    help='Loss to use when classification_type=REGRESSION.')
 parser.add_argument('--model_selection_metric', type=str, default='valid_loss',
                     help=f'Determines which metric should be used for selecting the best model among: {[e.name for e in ModelSelectionMetric]}. '
                          f'Default validation_loss.')
@@ -207,6 +211,8 @@ parser.add_argument('--sam_rho', type=float, metavar='RHO', default=2.,
 parser.add_argument('--lr', type=float, default=5e-4, metavar='LR',
                     help='learning rate (default: 5e-4)')
 parser.add_argument('--layer_decay', type=float, default=0.65)
+parser.add_argument('--seed', type=int, default=200,
+                    help='Random seed for Python, NumPy, and PyTorch.')
 
 # Mentor Mixup
 parser.add_argument('--mentor_mix', action=argparse.BooleanOptionalAction, default=False,
@@ -245,6 +251,14 @@ parser.add_argument('--model_name', type=str, default='test', help='name of the 
 
 args = parser.parse_args()
 args.save_path = 'results/fine-tune/saved_models/' + args.dset_finetune + f'/{args.model_name}/'
+
+
+def set_random_seeds(seed: int) -> None:
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
 
 def prepare_learner(dls, global_rank, local_rank):
@@ -315,7 +329,8 @@ def prepare_learner(dls, global_rank, local_rank):
                                            path=args.save_path, global_rank=global_rank),
                     eval_tracker=EvalTracker(number_of_classes=args.n_classes,
                                              metrics_by_class=args.metric_by_class,
-                                             classification_type=dls.train.dataset.classification_type),
+                                             classification_type=dls.train.dataset.classification_type,
+                                             mode=args.head_type),
                     prediction_tracker=PredictionTracker(),
                     training_tracker=TrainingTracker(loss_func=loss_func, mode=args.head_type,
                                                      number_of_classes=args.n_classes,
@@ -342,19 +357,28 @@ def finetune_func(learn):
                    n_epochs=args.n_epochs_finetune + args.n_epochs_finetune_head)
 
     # Plot training metrics
-    plot_recorders(tracker=learn.training_tracker, split='Training', args=args,
-                   metrics=['train_accuracy', 'train_precision', 'train_recall', 'train_f1_score'],
-                   n_epochs=args.n_epochs_finetune + args.n_epochs_finetune_head)
+    if args.head_type is Mode.REGRESSION:
+        plot_recorders(tracker=learn.training_tracker, split='Training-Regression', args=args,
+                       metrics=['train_MSE', 'train_MAE', 'train_RMSE', 'train_R2'],
+                       n_epochs=args.n_epochs_finetune + args.n_epochs_finetune_head)
 
-    # Plot validation metrics
-    plot_recorders(tracker=learn.training_tracker, split='Validation', args=args,
-                   metrics=['valid_accuracy', 'valid_precision', 'valid_recall', 'valid_f1_score'],
-                   n_epochs=args.n_epochs_finetune + args.n_epochs_finetune_head,)
+        plot_recorders(tracker=learn.training_tracker, split='Validation-Regression', args=args,
+                       metrics=['valid_MSE', 'valid_MAE', 'valid_RMSE', 'valid_R2'],
+                       n_epochs=args.n_epochs_finetune + args.n_epochs_finetune_head)
+    else:
+        plot_recorders(tracker=learn.training_tracker, split='Training', args=args,
+                       metrics=['train_accuracy', 'train_precision', 'train_recall', 'train_f1_score'],
+                       n_epochs=args.n_epochs_finetune + args.n_epochs_finetune_head)
 
-    # Plot validation metrics
-    plot_recorders(tracker=learn.training_tracker, split='AUROC-AUPRC', args=args,
-                   metrics=['valid_AUROC', 'valid_AUPRC'],
-                   n_epochs=args.n_epochs_finetune + args.n_epochs_finetune_head)
+        # Plot validation metrics
+        plot_recorders(tracker=learn.training_tracker, split='Validation', args=args,
+                       metrics=['valid_accuracy', 'valid_precision', 'valid_recall', 'valid_f1_score'],
+                       n_epochs=args.n_epochs_finetune + args.n_epochs_finetune_head,)
+
+        # Plot validation metrics
+        plot_recorders(tracker=learn.training_tracker, split='AUROC-AUPRC', args=args,
+                       metrics=['valid_AUROC', 'valid_AUPRC'],
+                       n_epochs=args.n_epochs_finetune + args.n_epochs_finetune_head)
 
 
 def test_func(learn, dls):
@@ -367,13 +391,13 @@ def test_func(learn, dls):
                    save_path=os.path.join(args.save_path, f'_train_metrics_{args.model_name}'),
                    class_sizes=dls.train.dataset.get_class_sizes(),
                    split='train',
-                   per_class_only=True,
+                   per_class_only=args.head_type is not Mode.REGRESSION,
                    weight_path=weight_path)
     learn.eval(dataloader=dls.valid,
                save_path=os.path.join(args.save_path, f'_valid_metrics_{args.model_name}'),
                class_sizes=dls.valid.dataset.get_class_sizes(),
                split='validation',
-               per_class_only=True,
+               per_class_only=args.head_type is not Mode.REGRESSION,
                weight_path=weight_path)
     learn.eval(dataloader=dls.test,
                save_path=os.path.join(args.save_path, f'_test_metrics_{args.model_name}'),
@@ -384,6 +408,9 @@ def test_func(learn, dls):
 
 
 def bootstrap_function(learn, dls):
+    if args.head_type is Mode.REGRESSION:
+        raise NotImplementedError("Bootstrapping is currently implemented for classification metrics only.")
+
     # Get best model
     learn.load_model(weight_path=os.path.join(ROOT_DIR, args.save_path, f'{args.model_name}_best.pt'))
 
@@ -437,6 +464,8 @@ def linear_probing_func(learn):
 
 
 if __name__ == '__main__':
+    set_random_seeds(args.seed)
+
     # Set the dataset
     args.dset = args.dset_finetune
 
@@ -451,12 +480,18 @@ if __name__ == '__main__':
     assert args.model_name is not None, 'Model must have a name'
 
     # Convert strings to enums
-    args.model = Model[args.model.lower()]
+    args.model = Model[args.model.lower()] # Apply a breakpoint here
     args.class_token = ClassToken[args.class_token.upper()]
     args.diagnostic_class = DiagnosticClass[args.diagnostic_class.upper()]
     args.classification_type = ClassificationType[args.classification_type.upper()]
     args.data_augmentation = DataAugmentation[args.data_augmentation.lower()]
     args.model_selection_metric = ModelSelectionMetric[args.model_selection_metric]
+
+    if args.head_type is Mode.REGRESSION:
+        assert args.classification_type is ClassificationType.REGRESSION, \
+            'head_type=regression requires classification_type=REGRESSION'
+        assert not args.focal_loss, 'focal_loss is classification-only and cannot be used for regression'
+        assert not args.mentor_mix, 'mentor_mix currently uses BCE weighting and cannot be used for regression'
 
     if args.model == Model.cpc:
         torch.backends.cudnn.enabled = False

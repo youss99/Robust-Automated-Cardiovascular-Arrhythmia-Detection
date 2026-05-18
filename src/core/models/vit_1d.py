@@ -132,7 +132,7 @@ class ViT(nn.Module):
 
         self.transformer = Transformer(dim, depth, heads, dim_head, mlp_dim, dropout)
 
-        if mode == Mode.CLASSIFICATION:
+        if mode in [Mode.CLASSIFICATION, Mode.REGRESSION, Mode.PREDICTION]:
             self.mlp_head = ClassificationHead(d_model=dim, n_classes=num_classes, channels=channels)
         else:
             self.mlp_head = PretrainHead(d_model=dim, n_classes=num_classes, channels=channels)

@@ -78,7 +78,8 @@ def to_numpy(b):
 def convert_signal_to_image(record, sig_filter, title):
     t = np.arange(0, 1, 1 / record.shape[1])
     # Generate the plot for this image
-    fig, axs = plt.subplots(nrows=record.shape[0], ncols=1, figsize=(10, 10))
+    fig, axs = plt.subplots(nrows=record.shape[0], ncols=1, figsize=(10, 10), squeeze=False)
+    axs = axs[:, 0]
     for j, lead in enumerate(record):
         # Filter and plot the signal
         if sig_filter is None:
@@ -101,7 +102,8 @@ def convert_signal_to_image_reconstruction(record, sig_filter, save_path, title,
     t = np.arange(0, 1, 1 / record.shape[1])
 
     # Generate the plot for this image
-    fig, axs = plt.subplots(nrows=record.shape[0], ncols=1, figsize=(10, 10))
+    fig, axs = plt.subplots(nrows=record.shape[0], ncols=1, figsize=(10, 10), squeeze=False)
+    axs = axs[:, 0]
     for j, lead in enumerate(record):
         lead_mask = mask[j]
         # Filter the signal if filter provided

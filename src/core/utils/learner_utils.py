@@ -29,8 +29,8 @@ def get_model(c_in, seq_len, args, global_rank):
     # get number of patches
     num_patch = (max(seq_len, args.patch_len) - args.patch_len) // args.stride + 1
 
-    target_dim = args.n_classes if args.head_type is Mode.CLASSIFICATION else args.patch_len
-    class_token = args.class_token if args.head_type is Mode.CLASSIFICATION else None
+    target_dim = args.n_classes if args.head_type in [Mode.CLASSIFICATION, Mode.REGRESSION, Mode.PREDICTION] else args.patch_len
+    class_token = args.class_token if args.head_type in [Mode.CLASSIFICATION, Mode.REGRESSION, Mode.PREDICTION] else None
 
     if args.model == Model.e_d_vit:
         model = EncoderDecoderViT(

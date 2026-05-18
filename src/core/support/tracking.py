@@ -76,6 +76,9 @@ class TrainingTracker(AbstractSupportClass):
                 recorder['valid_accuracy'], recorder['valid_precision'], \
                     recorder['valid_recall'], recorder['valid_f1_score'], \
                     recorder['valid_AUROC'], recorder['valid_AUPRC'] = [], [], [], [], [], []
+            elif self.mode == Mode.REGRESSION:
+                recorder['train_MSE'], recorder['train_MAE'], recorder['train_RMSE'], recorder['train_R2'] = [], [], [], []
+                recorder['valid_MSE'], recorder['valid_MAE'], recorder['valid_RMSE'], recorder['valid_R2'] = [], [], [], []
         self.recorder = recorder
 
     def reset(self):
@@ -131,19 +134,20 @@ class TrainingTracker(AbstractSupportClass):
         loss = loss.detach() * bs if self.mean_reduction_ else loss.detach()
         self.batch_recorder['batch_losses'].append(loss)
 
-        if self.mode == Mode.CLASSIFICATION:
+        if self.mode in [Mode.CLASSIFICATION, Mode.REGRESSION]:
             # Append data to list
             self.predictions.append(pred.data.cpu().detach())
             self.labels.append(yb.data.data.cpu().detach())
 
 
 class EvalTracker(AbstractSupportClass):
-    def __init__(self, number_of_classes, classification_type, metrics_by_class=False):
+    def __init__(self, number_of_classes, classification_type, metrics_by_class=False, mode=Mode.CLASSIFICATION):
         self.predictions, self.labels = [], []
         self.recorder, self.per_class_recorder = {}, {}
         self.number_of_classes = number_of_classes
         self.classification_type = classification_type
         self.metrics_by_class = metrics_by_class
+        self.mode = mode
         self.print_format = None
         self.split = None
         super().__init__()
@@ -159,8 +163,11 @@ class EvalTracker(AbstractSupportClass):
 
     def initialize_recorder(self):
         self.labels, self.predictions = [], []
-        keys = [f'{self.split}_accuracy', f'{self.split}_precision', f'{self.split}_recall', f'{self.split}_f1_score',
-                f'{self.split}_AUROC', f'{self.split}_AUPRC']
+        if self.mode == Mode.REGRESSION or self.classification_type == ClassificationType.REGRESSION:
+            keys = [f'{self.split}_MSE', f'{self.split}_MAE', f'{self.split}_RMSE', f'{self.split}_R2']
+        else:
+            keys = [f'{self.split}_accuracy', f'{self.split}_precision', f'{self.split}_recall',
+                    f'{self.split}_f1_score', f'{self.split}_AUROC', f'{self.split}_AUPRC']
         self.recorder, self.per_class_recorder = {key: [] for key in keys}, {key: [] for key in keys}
 
     def after_batch_eval(self, pred, yb):
@@ -173,7 +180,7 @@ class EvalTracker(AbstractSupportClass):
                                                   number_of_classes=self.number_of_classes,
                                                   metrics_by_class=self.metrics_by_class,
                                                   classification_type=self.classification_type, batch_recorder=None,
-                                                  mode=Mode.CLASSIFICATION)
+                                                  mode=self.mode)
 
         # save training loss after one epoch
         for key in values.keys():
@@ -210,6 +217,13 @@ def compute_scores(predictions, labels, number_of_classes, metrics_by_class, bat
         values['loss'] = sum(batch_recorder['batch_losses']).item() / sum(batch_recorder['n_samples'])
 
     # calculate metrics
+    if mode == Mode.REGRESSION or classification_type == ClassificationType.REGRESSION:
+        raw_predictions = torch.cat(predictions)
+        labels = torch.cat(labels)
+        return compute_scores_regression(raw_predictions=raw_predictions, values=values,
+                                         per_class_values=per_class_values, labels=labels,
+                                         metrics_by_class=metrics_by_class)
+
     if mode == Mode.CLASSIFICATION:
         raw_predictions = torch.cat(predictions)
         labels = torch.cat(labels)
@@ -227,6 +241,36 @@ def compute_scores(predictions, labels, number_of_classes, metrics_by_class, bat
                                               number_of_labels=number_of_classes, metrics_by_class=metrics_by_class)
     else:
         return values, per_class_values
+
+
+def compute_scores_regression(raw_predictions, values, per_class_values, labels, metrics_by_class):
+    raw_predictions = raw_predictions.float()
+    labels = labels.float()
+    diff = raw_predictions - labels
+    squared = diff ** 2
+    absolute = torch.abs(diff)
+
+    mse_by_target = torch.mean(squared, dim=0)
+    mae_by_target = torch.mean(absolute, dim=0)
+    rmse_by_target = torch.sqrt(mse_by_target)
+
+    target_mean = torch.mean(labels, dim=0)
+    ss_res = torch.sum(squared, dim=0)
+    ss_tot = torch.sum((labels - target_mean) ** 2, dim=0)
+    r2_by_target = torch.where(ss_tot > 0, 1 - ss_res / ss_tot, torch.full_like(ss_tot, float('nan')))
+
+    values['MSE'] = torch.mean(mse_by_target).detach().cpu().item()
+    values['MAE'] = torch.mean(mae_by_target).detach().cpu().item()
+    values['RMSE'] = torch.mean(rmse_by_target).detach().cpu().item()
+    values['R2'] = torch.nanmean(r2_by_target).detach().cpu().item()
+
+    if metrics_by_class:
+        per_class_values['MSE'] = ['{:.6f}'.format(elem) for elem in mse_by_target.detach().cpu()]
+        per_class_values['MAE'] = ['{:.6f}'.format(elem) for elem in mae_by_target.detach().cpu()]
+        per_class_values['RMSE'] = ['{:.6f}'.format(elem) for elem in rmse_by_target.detach().cpu()]
+        per_class_values['R2'] = ['{:.6f}'.format(elem) for elem in r2_by_target.detach().cpu()]
+
+    return values, per_class_values
 
 
 def compute_scores_multi_class(raw_predictions, values, per_class_values, labels, number_of_classes, metrics_by_class):

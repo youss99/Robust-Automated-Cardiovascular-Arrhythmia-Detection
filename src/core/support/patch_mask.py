@@ -142,7 +142,7 @@ def create_patch(xb, patch_len, stride):
     xb = xb[..., s_begin:]  # xb: [bs x nvars x tgt_len]
 
     # For torch tensors
-    xb = xb.unfold(dimension=xb.ndim-1, size=patch_len, step=stride).squeeze()  # xb: [bs x n_vars x num_patch x patch_len]
+    xb = xb.unfold(dimension=xb.ndim-1, size=patch_len, step=stride)  # xb: [bs x n_vars x num_patch x patch_len]
 
     # For numpy arrays
     # xb = np.stack(np.split(xb, seq_len // patch_len, axis=2), axis=2)

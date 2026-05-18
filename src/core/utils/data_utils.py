@@ -7,9 +7,12 @@ from src.core.datasets.cinc_2020_dataset.cinc_2020_dataset import Cinc2020Datase
 from src.core.datasets.code_dataset.code_dataset_annotated import CodeDatasetAnnotated
 from src.core.datasets.code_dataset.code_dataset_unannotated import CodeDatasetUnannotated
 from src.core.datasets.unified_annotated_dataset.unified_dataset import UnifiedDataset
+from src.core.datasets.custom_binary_dataset.custom_binary_dataset import SingleLeadBinaryDataset, TwoLeadBinaryDataset
+from src.core.datasets.custom_regression_dataset.custom_regression_dataset import PatientSegmentRegressionDataset
 from src.core.utils.filters import ButterworthFilter, MedianFilter
 
-DSETS = ['chapman', 'cinc-2020', 'ptb-xl', 'CODE_Annotated', 'CODE_Unannotated', 'unified']
+DSETS = ['chapman', 'cinc-2020', 'ptb-xl', 'CODE_Annotated', 'CODE_Unannotated', 'unified',
+         'single-lead-binary', 'two-lead-binary', 'patient-segment-regression']
 
 
 def get_dls(params):
@@ -26,6 +29,7 @@ def get_dls(params):
                         'custom_lead_selection': params.custom_lead_selection,
                         'focal_loss': params.focal_loss,
                         'focal_alpha': params.focal_alpha,
+                        'regression_loss': params.regression_loss if hasattr(params, 'regression_loss') else 'mse',
                         'alt_lead_ordering': params.alt_lead_ordering
     }
     if hasattr(params, 'custom_class_selection'):
@@ -100,6 +104,36 @@ def get_dls(params):
     elif params.dset == 'unified':
         dls = DataLoaders(
             datasetCls=UnifiedDataset,
+            dataset_kwargs=dataset_kwargs,
+            batch_size=params.batch_size,
+            workers=params.num_workers,
+            reset_strat_folds=params.reset_strat_folds,
+            distributed=params.distributed
+        )
+
+    elif params.dset == 'single-lead-binary':
+        dls = DataLoaders(
+            datasetCls=SingleLeadBinaryDataset,
+            dataset_kwargs=dataset_kwargs,
+            batch_size=params.batch_size,
+            workers=params.num_workers,
+            reset_strat_folds=params.reset_strat_folds,
+            distributed=params.distributed
+        )
+
+    elif params.dset == 'two-lead-binary':
+        dls = DataLoaders(
+            datasetCls=TwoLeadBinaryDataset,
+            dataset_kwargs=dataset_kwargs,
+            batch_size=params.batch_size,
+            workers=params.num_workers,
+            reset_strat_folds=params.reset_strat_folds,
+            distributed=params.distributed
+        )
+
+    elif params.dset == 'patient-segment-regression':
+        dls = DataLoaders(
+            datasetCls=PatientSegmentRegressionDataset,
             dataset_kwargs=dataset_kwargs,
             batch_size=params.batch_size,
             workers=params.num_workers,
