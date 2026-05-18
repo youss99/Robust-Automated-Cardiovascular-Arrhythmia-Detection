@@ -1,3 +1,45 @@
+# ============================================================
+# ML / experiment artifacts — large, never upload
+# ============================================================
+# Datasets (H5 + metadata): hundreds of MB to GBs each
+custom_datasets/
+
+# Training results: model checkpoints + per-run metrics
+results/
+src/results/
+
+# Common artifact file types (catches anything outside the dirs above)
+*.pt
+*.ckpt
+*.pth
+*.h5
+*.hdf5
+
+# ============================================================
+# Python environment + caches
+# ============================================================
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+
+# ============================================================
+# Local working notes / logs
+# ============================================================
+notes
+*.log
+
+# ============================================================
+# OS / editor artifacts
+# ============================================================
+.DS_Store
+.vscode/
+
+# ============================================================
+# Original .gitignore content (IDE-specific) below
+# ============================================================
 /.idea/deployment.xml
 /.idea/Masters-Research.iml
 /.idea/misc.xml
