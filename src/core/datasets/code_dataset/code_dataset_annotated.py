@@ -3,7 +3,6 @@ import os
 import h5py
 import numpy as np
 import torch
-from torch.utils.data.dataset import T_co
 
 from src.core.datasets.ecg_dataset import EcgDataset
 from src.core.datasets.ecg_interface import Split, ClassificationType

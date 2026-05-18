@@ -1,17 +1,19 @@
 import copy
 import glob
 import os
+from typing import TypeVar
 
 import h5py
 import numpy as np
 import pandas as pd
 import numpy.random
 import torch
-from torch.utils.data.dataset import T_co
 
 from src.core.datasets.ecg_dataset import EcgDataset
 from src.core.datasets.ecg_interface import Split, ClassificationType
 from src.core.utils.basics import _torch
+
+T_co = TypeVar("T_co", covariant=True)
 
 
 class CodeDatasetUnannotated(EcgDataset):
