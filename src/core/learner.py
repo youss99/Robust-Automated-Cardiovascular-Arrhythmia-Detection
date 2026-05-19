@@ -3,7 +3,12 @@ from enum import Enum
 
 import einops
 import torch.nn
-from ray.air import session
+try:
+    from ray.air import session
+    HAS_RAY = True
+except ImportError:
+    session = None
+    HAS_RAY = False
 from torch import nn
 
 from src.core.models.encoder_decoder_vit import EncoderDecoderViT
@@ -530,11 +535,12 @@ class Learner:
             self.epoch_validate()
             self.after_epoch()
 
-            session.report(
-                {"loss": self.training_tracker.recorder['valid_loss'][-1],
-                 "AUROC": self.training_tracker.recorder['valid_AUROC'][-1],
-                 "epoch": self.epochs_run}
-            )
+            if HAS_RAY:
+                session.report(
+                    {"loss": self.training_tracker.recorder['valid_loss'][-1],
+                     "AUROC": self.training_tracker.recorder['valid_AUROC'][-1],
+                     "epoch": self.epochs_run}
+                )
 
 
     def linear_probe(self, n_epochs, cls_token=False, base_lr=None, pct_start=0.3):
