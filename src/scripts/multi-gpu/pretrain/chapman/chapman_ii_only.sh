@@ -19,7 +19,7 @@
 
 set -uo pipefail
 
-module load python/3.10 cuda cudnn
+module load python/3.10 cuda cudnn gcc arrow
 
 REPO_ROOT="$HOME/projects/def-majidk/youss99/Project_1/Robust-Automated-Cardiovascular-Arrhythmia-Detection"
 DATA_SRC="$HOME/projects/def-majidk/youss99/Project_1/Datasets/chapman"
