@@ -10,11 +10,11 @@
 #SBATCH --account=def-majidk
 #SBATCH --job-name=chapman_ii_v2_tta
 #SBATCH --nodes=1
-#SBATCH --gpus-per-node=a100:1
+#SBATCH --gpus-per-node=a100_3g.20gb:1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=32G
-#SBATCH --time=04:00:00
+#SBATCH --mem=20G
+#SBATCH --time=01:00:00
 #SBATCH --output=logs/chapman_ii_v2_tta-%j.out
 
 set -uo pipefail
