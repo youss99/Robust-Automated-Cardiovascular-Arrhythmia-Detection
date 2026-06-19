@@ -1,0 +1,19 @@
+group,screenshot_label,maps_to_abbrev,snomed_name,snomed_code,unified_n_samples,status,notes
+Rhythm,PVC,PVC,premature ventricular contractions,427172004,1259,trainable,also VPB(643) ventricular premature beats - decide whether to merge
+Rhythm,APB,PAC,premature atrial contraction,284470004,2976,trainable,also SVPB(222) supraventricular premature beats - candidate to merge
+Rhythm,Sinus Arrest,NONE,no categorical source,NA,0,missing,no SA-arrest code in any dataset; closest SAB/SND are clinically distinct; derive from RR-gap heuristic or add external Holter source
+Rhythm,A Fib,AF,atrial fibrillation,164889003,5151,trainable,beware overlap with AFAFL / chronic-AF / paroxysmal-AF codes
+Rhythm,A Flutter,AFL,atrial flutter,164890007,8207,trainable,beware overlap with AFAFL
+Rhythm,V Tach,VTach,ventricular tachycardia,164895002,108,rare,plain VTach absent in thesis Unified run; only PVT(108) survived min_class_size; very imbalanced
+Rhythm,V Fib,VF,ventricular fibrillation,164896001,95,rare,~95 samples total; also VFL ventricular flutter in label space; severe imbalance - needs focal loss / oversampling
+Rhythm,First deg HB,IAVB,1st degree av block,270492004,3462,trainable,also generic AVB(313)
+Rhythm,2nd deg HB,IIAVB,2nd degree av block,195042002,122,rare,plus MoI Mobitz-I(21) and 2AVB2 Mobitz-II - sub-types are tiny; consider collapsing to one '2nd deg HB'
+Rhythm,3rd deg HB,CHB,complete heart block,27885002,122,rare,low count; high imbalance
+QRS,Q waves,QAb,qwave abnormal,164917005,2031,trainable,
+QRS,LBBB,LBBB,left bundle branch block,164909002,1255,trainable,also ILBBB(207) incomplete LBBB - decide merge
+QRS,QRS abN NYD,abQRS,abnormal QRS,164951009,3269,trainable,'not-yet-diagnosed' nuance is lost; abQRS is just a non-specific abnormal-QRS flag
+ST,ST dep 1-2mm,STD,st depression,429622005,3572,partial,binary present/absent only - NO mm grading; use regression track for magnitude
+ST,ST dep >2mm,STD,st depression,429622005,3572,partial,same STD code as above - categorical labels cannot separate 1-2mm vs >2mm
+ST,ST elevation 1-2mm,STE,st elevation,164931005,612,partial,binary only - NO mm grading
+ST,ST elevation >2mm,STE,st elevation,164931005,612,partial,same STE code - mm separation requires ST-deviation regression (your existing path)
+T wave,T Inversion,TInv,t wave inversion,59931005,3917,trainable,also TAb(11478) generic t-wave-abnormal - broader superset

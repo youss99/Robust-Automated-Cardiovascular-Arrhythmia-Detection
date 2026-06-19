@@ -6,6 +6,7 @@ import torch
 
 from src.core.constants.definitions import ROOT_DIR, DataAugmentation, Mode, Model
 from src.core.datasets.ecg_interface import ClassificationType
+from src.core.datasets.ptb_xl.ptb_xl_dataset import DiagnosticClass
 from src.core.models.optim_factory import create_optimizer, prepare_optimizer
 from src.core.support.abstract_support_class import AbstractSupportClass
 from src.core.support.general import ModelSaver, ReconstructionPlotter
@@ -185,7 +186,12 @@ parser.add_argument('--local_node', action=argparse.BooleanOptionalAction, defau
 # Pretrained model name
 parser.add_argument('--pretrained_model_path', type=str, default=None, help='pretrained model name')
 
+# Diagnostic class grouping (required by the PTB-XL dataset branch in get_dls; ignored by other datasets)
+parser.add_argument('--diagnostic_class', type=str, default='all',
+                    help='Diagnostic class grouping for PTB-XL pretraining (all/superclass/subclass/form_only/rhythm_only)')
+
 params = parser.parse_args()
+params.diagnostic_class = DiagnosticClass[params.diagnostic_class.upper()]
 params.save_path = 'results/pre-train/saved_models/' + params.dset_pretrain + f'/{params.model_name}/'
 
 
