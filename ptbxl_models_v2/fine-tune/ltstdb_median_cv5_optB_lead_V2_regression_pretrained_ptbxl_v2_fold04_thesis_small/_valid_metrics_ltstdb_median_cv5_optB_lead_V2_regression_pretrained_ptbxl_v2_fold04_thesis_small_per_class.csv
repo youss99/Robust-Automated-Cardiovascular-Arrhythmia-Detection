@@ -1,0 +1,2 @@
+label,count,mean,std,min,max,MSE,MAE,RMSE,R2
+target_lead1_mV,16372,0.102918,0.042010,-0.120000,0.221500,0.001078,0.027611,0.032840,0.388922
