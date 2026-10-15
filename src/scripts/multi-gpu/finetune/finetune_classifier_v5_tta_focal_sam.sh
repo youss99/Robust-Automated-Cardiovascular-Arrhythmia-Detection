@@ -25,7 +25,7 @@ module load python/3.10 cuda cudnn gcc arrow
 REPO="$HOME/projects/def-majidk/youss99/Project_1/Robust-Automated-Cardiovascular-Arrhythmia-Detection"
 DATASETS="$HOME/projects/def-majidk/youss99/Project_1/Datasets"
 case "$DSET" in
-  unified) SRC="$DATASETS/Unified_Dataset_No_PTB_Segment"; STAGE="unified"; MIN=15;;
+  unified) SRC="$DATASETS/Unified_Dataset_No_PTB_Segment_fixed"; STAGE="unified"; MIN=15;;
   ptb-xl)  SRC="$DATASETS/ptb-xl_1.0.3";                  STAGE="ptb-xl";  MIN=0;;
   *) echo "unknown dset: $DSET" >&2; exit 2;;
 esac
@@ -58,4 +58,4 @@ torchrun --standalone --nproc_per_node=1 -m src.patchECG_finetune \
     --sam --sam_rho=2 --sam_adaptive \
     --model_selection_metric=valid_AUROC --metric_by_class \
     --no-bootstrapping --iterations=5000 --save_every=20 \
-    --pretrained_model_path="$CKPT" --model_name="$MODEL_NAME"
+    --pretrained_model_path="$CKPT" --model_name="$MODEL_NAME" ${EXTRA_ARGS:-}

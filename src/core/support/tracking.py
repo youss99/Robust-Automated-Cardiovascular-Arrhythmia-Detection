@@ -197,17 +197,25 @@ class EvalTracker(AbstractSupportClass):
 class PredictionTracker(AbstractSupportClass):
     def __init__(self):
         self.preds = []
+        self.targets = []
         super().__init__()
 
     def before_predict(self):
         self.preds = []
+        self.targets = []
 
-    def after_batch_predict(self, pred):
+    def after_batch_predict(self, pred, target=None):
         # append the prediction after each forward batch
-        self.preds.append(pred)
+        self.preds.append(pred.detach())
+        if target is not None:
+            self.targets.append(target.detach())
 
     def after_predict(self):
-        self.preds = torch.concat(self.preds)  # .detach().cpu().numpy()
+        # Guard against the empty case: before this fix batch_predict never
+        # reported anything, so torch.concat([]) raised
+        # "expected a non-empty list of Tensors".
+        self.preds = torch.concat(self.preds) if len(self.preds) else torch.empty(0)
+        self.targets = torch.concat(self.targets) if len(self.targets) else torch.empty(0)
 
 
 def compute_scores(predictions, labels, number_of_classes, metrics_by_class, batch_recorder, classification_type,

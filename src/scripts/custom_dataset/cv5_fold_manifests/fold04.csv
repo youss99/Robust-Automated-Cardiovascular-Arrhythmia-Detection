@@ -1,0 +1,17 @@
+patient_id,split
+s20081,train
+s20091,train
+s20121,train
+s20221,train
+s20241,train
+s20011,train
+s20051,train
+s20061,train
+s20071,train
+s20101,train
+s20111,train
+s20231,train
+s20201,val
+s20211,val
+s20131,test
+s20141,test

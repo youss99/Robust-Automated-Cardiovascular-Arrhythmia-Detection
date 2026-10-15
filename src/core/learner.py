@@ -381,6 +381,9 @@ class Learner:
             # forward
             pred, yb = self.model_forward(xb=xb, yb=yb)
 
+        # all_batches() discards this return value, so the prediction has to be
+        # handed to the tracker here or predict() comes back empty.
+        self.prediction_tracker.after_batch_predict(pred=pred, target=yb)
         return pred, yb
 
     def batch_test(self, batch):
@@ -457,7 +460,8 @@ class Learner:
         self.prediction_tracker.after_predict()
 
         predictions_list = self.prediction_tracker.preds
-        return to_numpy(predictions_list)
+        targets_list = self.prediction_tracker.targets
+        return to_numpy(predictions_list), to_numpy(targets_list)
 
     def eval(self, dataloader, save_path, class_sizes, split, per_class_only=False, weight_path=None):
         """_summary_

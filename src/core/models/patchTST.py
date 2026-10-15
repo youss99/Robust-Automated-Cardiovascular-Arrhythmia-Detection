@@ -78,21 +78,33 @@ class PatchTST(nn.Module):
 class RegressionHead(nn.Module):
     def __init__(self, n_vars, d_model, output_dim, head_dropout, y_range=None):
         super().__init__()
+        self.n_vars = n_vars
+        self.output_dim = output_dim
         self.y_range = y_range
-        self.flatten = nn.Flatten(start_dim=1)
         self.dropout = nn.Dropout(head_dropout)
-        self.linear = nn.Linear(n_vars*d_model, output_dim)
+        # Per-lead targets (output_dim == n_vars) preserve PatchTST's
+        # channel-independence: lead i's CLS projects to target i via shared
+        # weights. Otherwise fall back to a concat head where every lead
+        # contributes to every output.
+        self.per_lead = (output_dim == n_vars)
+        if self.per_lead:
+            self.linear = nn.Linear(d_model, 1)
+        else:
+            self.flatten = nn.Flatten(start_dim=1)
+            self.linear = nn.Linear(n_vars * d_model, output_dim)
 
     def forward(self, x):
         """
-        x: [bs x nvars x d_model x num_patch]
+        x: [bs x nvars x num_patch x d_model]
         output: [bs x output_dim]
         """
-        x = x[:,:,:,-1]             # only consider the last item in the sequence, x: bs x nvars x d_model
-        x = self.flatten(x)         # x: bs x nvars * d_model
+        x = x[:, :, 0, :]                        # cls token (position 0), [bs, nvars, d_model]
         x = self.dropout(x)
-        y = self.linear(x)         # y: bs x output_dim
-        if self.y_range: y = SigmoidRange(*self.y_range)(y)        
+        if self.per_lead:
+            y = self.linear(x).squeeze(-1)       # [bs, nvars]
+        else:
+            y = self.linear(self.flatten(x))     # [bs, output_dim]
+        if self.y_range: y = SigmoidRange(*self.y_range)(y)
         return y
 
 

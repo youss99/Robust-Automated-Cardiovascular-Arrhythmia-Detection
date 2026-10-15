@@ -12,13 +12,15 @@
 #SBATCH --output=logs/%x-%j.out
 set -euo pipefail
 DSET="$1"; LEADS="$2"; MODEL_NAME="$3"
+EPOCHS="${4:-500}"   # optional: override epochs (use 1 for a smoke/sizing run)
+BATCH="${5:-128}"    # optional: override batch (drop for long all_leads sequences if OOM)
 
 module load python/3.10 cuda cudnn gcc arrow
 REPO="$HOME/projects/def-majidk/youss99/Project_1/Robust-Automated-Cardiovascular-Arrhythmia-Detection"
 DATASETS="$HOME/projects/def-majidk/youss99/Project_1/Datasets"
 case "$DSET" in
   ptb-xl)  SRC="$DATASETS/ptb-xl_1.0.3";                 STAGE="ptb-xl";;
-  unified) SRC="$DATASETS/Unified_Dataset_No_PTB_Segment"; STAGE="unified";;
+  unified) SRC="$DATASETS/Unified_Dataset_No_PTB_Segment_fixed"; STAGE="unified";;
   *) echo "unknown dset: $DSET" >&2; exit 2;;
 esac
 
@@ -37,5 +39,5 @@ torchrun --standalone --nproc_per_node=1 -m src.patchECG_pretrain \
     --data_augmentation=none --trafos None --mask_ratio=0.4 --zero_noise_mixing=0.5 \
     --opt=adamw --weight_decay=0.05 --lr=0.0015 --scheduler \
     --warmup_epochs=2 --warmup_lr=1e-06 --min_lr=1e-05 \
-    --batch_size=128 --num_workers=4 --n_epochs_pretrain=500 \
+    --batch_size="$BATCH" --num_workers=4 --n_epochs_pretrain="$EPOCHS" \
     --save_every=20 --plot_every_n=1 --world_size=1 --local_node

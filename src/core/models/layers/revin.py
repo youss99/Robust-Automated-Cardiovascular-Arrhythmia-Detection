@@ -8,7 +8,9 @@ class RevIN(nn.Module):
         :param eps: a value added for numerical stability
         :param affine: if True, RevIN has learnable affine parameters
         """
-        assert norm_stats in ['BN', 'ptb-xl'], "RevIn must use batch normalization or ptb-xl stats"
+        # 'BN': per-lead stats pooled over batch AND time (batch-dependent, also in eval).
+        # 'instance': per-lead stats over time for each window independently (batch-independent); same eps/bias.
+        assert norm_stats in ['BN', 'instance', 'ptb-xl'], "RevIn must use batch, instance or ptb-xl stats"
         super(RevIN, self).__init__()
         self.num_features = num_features
         self.eps = eps
@@ -46,6 +48,11 @@ class RevIN(nn.Module):
             dim2reduce = tuple(range(0, x.ndim-1))
             self.mean = torch.mean(x, dim=dim2reduce, keepdim=False).detach()
             self.stdev = torch.sqrt(torch.var(x, dim=dim2reduce, keepdim=False, unbiased=False) + self.eps).detach()
+        elif self.norm_stats == 'instance':
+            # x: [bs x seq_len x nvars] -> stats [bs x 1 x nvars]
+            dim2reduce = tuple(range(1, x.ndim-1))
+            self.mean = torch.mean(x, dim=dim2reduce, keepdim=True).detach()
+            self.stdev = torch.sqrt(torch.var(x, dim=dim2reduce, keepdim=True, unbiased=False) + self.eps).detach()
         else:
             self.mean = self.mean.to(x.device)
             self.stdev = self.stdev.to(x.device)

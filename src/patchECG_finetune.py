@@ -44,6 +44,9 @@ parser.add_argument('--finetuning', action=argparse.BooleanOptionalAction, defau
                     help='whether or not to do fine-tuning (default true)')
 parser.add_argument('--testing', action=argparse.BooleanOptionalAction, default=True,
                     help='whether or not to do testing (default true)')
+parser.add_argument('--dump_logits', action=argparse.BooleanOptionalAction, default=False,
+                    help='also write per-sample logits + targets to _logits_<model>_<split>.npz '
+                         'so thresholds/calibration can be swept offline without re-running inference')
 parser.add_argument('--is_linear_probe', type=int, default=0, help='if linear_probe: only finetune the last layer')
 parser.add_argument('--metric_by_class', action=argparse.BooleanOptionalAction, default=False,
                     help='prints metrics by class if true')
@@ -405,6 +408,22 @@ def test_func(learn, dls):
                split='test',
                per_class_only=False,
                weight_path=weight_path)
+
+    # Optional: persist raw per-sample outputs so threshold tuning, calibration and
+    # label-merge analyses can be done offline (CPU only) without re-running inference.
+    if getattr(args, 'dump_logits', False):
+        for split_name, dl in (('valid', dls.valid), ('test', dls.test)):
+            if dl is None:
+                continue
+            preds, targets = learn.predict(dataloader=dl, weight_path=weight_path)
+            ds = dl.dataset
+            if targets is None or getattr(targets, 'size', 0) == 0:
+                targets = np.asarray(ds._n_hot_vector)
+            classes = np.asarray([str(c) for c in ds.classes]) if len(ds.classes) else np.asarray([])
+            out = os.path.join(ROOT_DIR, args.save_path,
+                               f'_logits_{args.model_name}_{split_name}.npz')
+            np.savez_compressed(out, logits=preds, targets=targets, classes=classes)
+            print(f'[dump_logits] {split_name}: logits{preds.shape} targets{targets.shape} -> {out}')
 
 
 def bootstrap_function(learn, dls):

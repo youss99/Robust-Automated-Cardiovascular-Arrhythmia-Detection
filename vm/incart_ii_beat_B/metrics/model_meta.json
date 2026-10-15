@@ -1,0 +1,79 @@
+{
+ "run": "B",
+ "norm_stats": "instance",
+ "loss": "ce",
+ "focal_gamma": null,
+ "focal_class_weights": null,
+ "revin_eps": 1e-05,
+ "revin_affine": false,
+ "preprocessing": {
+  "input_units": "uV",
+  "unit_conversion": "physical signal (WFDB p_signal: (adc - baseline) / gain from the header) x {mV: 1e3, uV: 1, V: 1e6}; applied exactly once",
+  "pretrain_units_evidence": "UnifiedDataset.h5 stores raw .mat val; Chapman/CPSC2018/CPSC-extra/Georgia headers are 1000 adu/mV, baseline 0 -> microvolts",
+  "target_fs": 100,
+  "resampler": "scipy.signal.resample_poly(x, up, down) on the whole recording",
+  "annotation_mapping": "rint(sample * target_fs / fs)",
+  "window_len": 1000,
+  "window": "[centre - 500, centre + 500); centre beat at index 500; incomplete windows dropped",
+  "lead": "II",
+  "filtering": "none (matches pretraining)",
+  "class_names": [
+   "background",
+   "PAC",
+   "PVC"
+  ],
+  "label_map": {
+   "N": 0,
+   "R": 0,
+   "B": 0,
+   "j": 0,
+   "n": 0,
+   "A": 1,
+   "V": 2
+  }
+ },
+ "class_names": [
+  "background",
+  "PAC",
+  "PVC"
+ ],
+ "arch": {
+  "patch_len": 50,
+  "stride": 50,
+  "d_model": 128,
+  "n_layers": 6,
+  "n_heads": 8,
+  "d_ff": 512,
+  "dropout": 0.0
+ },
+ "backbone": "results/pre-train/saved_models/unified/patch_ecg_unified_ii_fixed/patch_ecg_unified_ii_fixed_best.pt",
+ "init_hash": "bf41f6fc754dba93",
+ "seed": 200,
+ "eval_protocol": "validation in fixed order randperm(seed=0), batch 128, eval mode, natural class frequencies",
+ "selection": "max mean(PAC AUPRC, PVC AUPRC) on validation over all epochs",
+ "train_config": {
+  "cache_dir": "/home/youss99/projects/def-majidk/youss99/Project_1/Datasets/incart_beat_leadII_100hz",
+  "backbone": "results/pre-train/saved_models/unified/patch_ecg_unified_ii_fixed/patch_ecg_unified_ii_fixed_best.pt",
+  "out_root": "results/fine-tune/saved_models/incart",
+  "seed": 200,
+  "batch_size": 128,
+  "lr": 0.001,
+  "weight_decay": 0.05,
+  "layer_decay": 0.65,
+  "head_epochs": 20,
+  "full_epochs": 70,
+  "snapshot_every": 5,
+  "focal_gamma": 2.0,
+  "eval_batch_size": 128,
+  "eval_order_seed": 0,
+  "bd_per_class": 128,
+  "bd_lowvar": 32,
+  "bd_seeds": "1,2,3",
+  "smoke": false
+ },
+ "steps_per_epoch": 877,
+ "note": "Most training PACs come from two patients (see prep_report.txt); results for PAC reflect very limited patient diversity, which focal loss does not address.",
+ "epoch": 47,
+ "phase": "full",
+ "val_selection_metric": 0.7633174957230001
+}

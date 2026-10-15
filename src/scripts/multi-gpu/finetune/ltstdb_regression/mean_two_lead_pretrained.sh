@@ -23,7 +23,7 @@ set -uo pipefail
 module load python/3.10 cuda cudnn gcc arrow
 
 REPO_ROOT="$HOME/projects/def-majidk/youss99/Project_1/Robust-Automated-Cardiovascular-Arrhythmia-Detection"
-DATA_SRC="$REPO_ROOT/custom_datasets/ltstdb_regression_mean_100hz_full16_12_2_2_omit_train_nocompress"
+DATA_SRC="$SCRATCH/ltstdb_datasets/ltstdb_regression_mean_100hz_full16_12_2_2_omit_train_nocompress"
 PRETRAINED_CKPT="$REPO_ROOT/results/pre-train/saved_models/chapman/patch_ecg_chapman_ii_v2_tta/patch_ecg_chapman_ii_v2_tta_best.pt"
 
 cd "$REPO_ROOT"

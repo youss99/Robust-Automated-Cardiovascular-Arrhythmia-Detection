@@ -8,6 +8,9 @@ custom_datasets/
 results/
 src/results/
 
+# SLURM job artifacts: .out stdout/stderr + auto-generated .sbatch wrappers
+logs/
+
 # Common artifact file types (catches anything outside the dirs above)
 *.pt
 *.ckpt

@@ -142,8 +142,15 @@ class ModelSaver(Tracker):
             # Optimizer must be re-instantiated for PEFT models
             model = PeftModel.from_pretrained(model.base_model.model, os.path.splitext(fname)[0],
                                               is_trainable=is_trainable)
-            opt = prepare_optimizer(model=model, args=self.args) if self.args.pretrained_model_path is not None else \
-                create_optimizer(model=model, args=self.args, filter_bias_and_bn=False)
+            # ...but ONLY when the caller intends to keep training. learn.eval() and
+            # learn.predict() pass opt=None and leave is_trainable=False, which freezes
+            # every parameter; building an optimizer over that raises
+            # "optimizer got an empty parameter list" and kills testing for every
+            # LoRA run. Re-instantiate only for the resume-training path.
+            if is_trainable:
+                opt = prepare_optimizer(model=model, args=self.args) \
+                    if self.args.pretrained_model_path is not None else \
+                    create_optimizer(model=model, args=self.args, filter_bias_and_bn=False)
         else:
             model_state = state['model']
             get_model_from_module(model).load_state_dict(model_state, strict=strict)
