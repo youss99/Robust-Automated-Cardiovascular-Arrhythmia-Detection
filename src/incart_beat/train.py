@@ -77,6 +77,12 @@ def get_args():
     p.add_argument('--jitter_ms', type=float, default=0.0,
                    help='shift each TRAINING window centre by a uniform random offset in +-jitter_ms (100 Hz samples, own '
                         'generator per epoch; validation stays centred). 0 = off, identical to earlier runs')
+    p.add_argument('--steps_per_epoch', type=int, default=0,
+                   help='cap on training steps per epoch for large caches (each epoch uses the first steps x batch '
+                        'windows of its own shuffled order). 0 = one full pass, identical to earlier runs')
+    p.add_argument('--tf32', action='store_true',
+                   help='allow TF32 matmuls/convolutions (faster on A100). Off by default: full fp32 so batch-dependence '
+                        'differences are interpretable')
     p.add_argument('--smoke', action='store_true', help='50 steps/epoch, 1+1 epochs, separate output dir')
     p.add_argument('--evaluate_test', action='store_true')
     a = p.parse_args()
@@ -335,6 +341,8 @@ def train_run(name, args, src, data, device, bd):
     tr_target = src.fine_labels(tr) if fine else tr_y
     total_epochs = args.head_epochs + args.full_epochs
     steps_per_epoch = len(tr) // args.batch_size  # drop_last
+    if args.steps_per_epoch > 0:
+        steps_per_epoch = min(steps_per_epoch, args.steps_per_epoch)
     if args.smoke:
         steps_per_epoch = min(steps_per_epoch, 50)
     va_order = eval_order(len(va), args.eval_order_seed)
@@ -484,8 +492,8 @@ def evaluate_test(args, src, device):
 
 def main():
     args = get_args()
-    torch.backends.cuda.matmul.allow_tf32 = False  # full fp32 so batch-dependence differences are interpretable
-    torch.backends.cudnn.allow_tf32 = False
+    torch.backends.cuda.matmul.allow_tf32 = args.tf32  # default full fp32 so batch-dependence differences are interpretable
+    torch.backends.cudnn.allow_tf32 = args.tf32
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     assert device.type == 'cuda', 'run this inside a GPU Slurm job'
     os.makedirs(os.path.join(args.out_root, '_shared'), exist_ok=True)

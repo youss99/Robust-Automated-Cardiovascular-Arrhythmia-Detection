@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # INCART lead-II central-beat runs A/B/C (sequential, resumable: resubmit to continue after a timeout).
 # Usage: [LEAD=V5] [SEEDS=200,201,202] sbatch src/scripts/incart_beat/train_incart_beat.sh [extra args, e.g. --smoke | --runs B --evaluate_test]
+# Multi-database caches (prepare_multi_nk, built on the VM): CACHE=<Datasets>/multi_II_nk sbatch --time=03:00:00 \
+#   src/scripts/incart_beat/train_incart_beat.sh --runs B --steps_per_epoch 2000 --out_root results/fine-tune/saved_models/incart_multi_nk
 #SBATCH --account=def-majidk
 #SBATCH --job-name=incart_beat
 #SBATCH --nodes=1
@@ -15,7 +17,7 @@ set -euo pipefail
 
 module load python/3.10 cuda cudnn gcc arrow
 REPO="$HOME/projects/def-majidk/youss99/Project_1/Robust-Automated-Cardiovascular-Arrhythmia-Detection"
-CACHE="$HOME/projects/def-majidk/youss99/Project_1/Datasets/incart_beat_lead${LEAD:-II}_100hz"
+CACHE="${CACHE:-$HOME/projects/def-majidk/youss99/Project_1/Datasets/incart_beat_lead${LEAD:-II}_100hz}"
 cd "$REPO"; source .venv/bin/activate
 export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-4}"; mkdir -p logs
 [[ -f "$CACHE/signals_uV_100hz.npy" ]] || { echo "ERROR: run prep_incart_beat.sh first" >&2; exit 2; }
