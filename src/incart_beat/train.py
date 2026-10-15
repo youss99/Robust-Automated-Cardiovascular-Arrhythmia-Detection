@@ -74,6 +74,9 @@ def get_args():
     p.add_argument('--bd_seeds', default='1,2,3', help='companion-set seeds')
     p.add_argument('--bd_select_seed', type=int, default=DEFAULT_SEED,
                    help='fixed selection of batch-dependence windows, independent of the training seed')
+    p.add_argument('--jitter_ms', type=float, default=0.0,
+                   help='shift each TRAINING window centre by a uniform random offset in +-jitter_ms (100 Hz samples, own '
+                        'generator per epoch; validation stays centred). 0 = off, identical to earlier runs')
     p.add_argument('--smoke', action='store_true', help='50 steps/epoch, 1+1 epochs, separate output dir')
     p.add_argument('--evaluate_test', action='store_true')
     a = p.parse_args()
@@ -384,10 +387,16 @@ def train_run(name, args, src, data, device, bd):
             p_.requires_grad = phase == 'full' or 'head' in n_
         model.train()
         perm = torch.randperm(len(tr), generator=torch.Generator().manual_seed(args.seed * 1000 + epoch)).to(device)
+        jit = int(round(args.jitter_ms * pp.TARGET_FS / 1000))
+        jit_gen = torch.Generator().manual_seed(args.seed * 1000 + epoch + 7_000_000)   # separate stream: jitter off = unchanged
+        max_start = src.signals.shape[1] - pp.WINDOW_LEN
         t0, losses = time.time(), torch.zeros((), device=device)
         for s in range(steps_per_epoch):
             idx = perm[s * args.batch_size:(s + 1) * args.batch_size]
-            loss = loss_fn(model(src.gather(tr_rows[idx], tr_starts[idx])), tr_target[idx], spec['loss'],
+            starts = tr_starts[idx]
+            if jit > 0:
+                starts = (starts + torch.randint(-jit, jit + 1, starts.shape, generator=jit_gen).to(device)).clamp(0, max_start)
+            loss = loss_fn(model(src.gather(tr_rows[idx], starts)), tr_target[idx], spec['loss'],
                            args.focal_gamma)
             opt.zero_grad(set_to_none=True)
             loss.backward()
