@@ -55,7 +55,7 @@ def render(lead, fold_idx, fold, seed_set, smoke=False):
     job_name = f"e1_{lead[5:]}_{fold_idx + 1}_s{seed_set}"
     epochs_head, epochs_full, walltime = (20, 70, WALLTIME) if not smoke else (0, 1, "00:30:00")
     if smoke:
-        model_name, job_name = f"SMOKE_{model_name}", "e1_smoke"
+        model_name, job_name = f"SMOKE_{model_name}", f"e1_smoke_{lead[5:]}"
     dataset = f"{SCRATCH_DS_ROOT}/{lead}/{fold}"
     log_pattern = f"{LOG_OUT}/{model_name}-%j.out"
     body = f"""#!/usr/bin/env bash
@@ -139,10 +139,12 @@ def main():
     submit.write_text("#!/usr/bin/env bash\nset -euo pipefail\ncd \"$(dirname \"$0\")\"\n"
                       + "".join(f"sbatch {n}\n" for n in names))
     submit.chmod(0o755)
-    # one 1-epoch job (V5, smallest) to check the environment, GPU request and backbone before submit_all.sh
-    _, body = render("lead_V5", 1, FOLDS["lead_V5"][1], 200, smoke=True)
-    (SBATCH_OUT / "smoke.sbatch").write_text(body)
-    print(f"Wrote {len(names)} sbatch files + submit_all.sh + smoke.sbatch under {SBATCH_OUT}")
+    # one 1-epoch job per lead to check the environment, GPU request and each backbone before submit_all.sh;
+    # its log must contain "successfully transferred!" (a missing backbone path silently trains from scratch)
+    for lead in FOLDS:
+        _, body = render(lead, 0, FOLDS[lead][0], 200, smoke=True)
+        (SBATCH_OUT / f"smoke_{lead}.sbatch").write_text(body)
+    print(f"Wrote {len(names)} sbatch files + submit_all.sh + smoke_<lead>.sbatch x3 under {SBATCH_OUT}")
 
 
 if __name__ == "__main__":

@@ -46,11 +46,28 @@ PY
 echo "== 4. Backbones"
 for b in patch_ecg_unified_ii_only patch_ecg_unified_v2_only patch_ecg_unified_v5_fixed; do
   f="results/pre-train/saved_models/unified/$b/${b}_best.pt"
-  [ -s "$f" ] && echo "ok  $f" || { echo "MISSING $f"; exit 1; }
+  [ -s "$f" ] && echo "ok  $f  $(md5sum < "$f" | cut -c1-32)" || { echo "MISSING $f"; exit 1; }
 done
+# Same layer names and shapes as the V5 backbone (which transfers cleanly into this regression model),
+# finite weights, and II / V2 not the same file.
+python - <<'EOF'
+import torch
+root = "results/pre-train/saved_models/unified"
+sd = {b: torch.load(f"{root}/patch_ecg_unified_{b}/patch_ecg_unified_{b}_best.pt", map_location="cpu")["model"]
+      for b in ("ii_only", "v2_only", "v5_fixed")}
+ref = {k: tuple(v.shape) for k, v in sd["v5_fixed"].items()}
+for b, m in sd.items():
+    sig = {k: tuple(v.shape) for k, v in m.items()}
+    assert sig == ref, f"{b}: layers differ from v5_fixed: {set(sig.items()) ^ set(ref.items())}"
+    assert all(torch.isfinite(v).all() for v in m.values() if v.is_floating_point()), f"{b}: non-finite weights"
+    print(f"ok  {b}: {len(m)} tensors, same layout as v5_fixed, all finite")
+assert not all(torch.equal(sd["ii_only"][k], sd["v2_only"][k]) for k in ref), "ii_only and v2_only are identical"
+print("ok  ii_only and v2_only differ")
+EOF
 
 echo "== 5. Job scripts"
 python src/scripts/custom_dataset/build_e1_train_sbatches.py
 echo
-echo "Next: sbatch logs/sbatch_scripts/e1_training/smoke.sbatch   (1 epoch, ~minutes)"
-echo "      then, if its log ends with test metrics: bash logs/sbatch_scripts/e1_training/submit_all.sh"
+echo "Next: for l in lead_II lead_V2 lead_V5; do sbatch logs/sbatch_scripts/e1_training/smoke_\$l.sbatch; done"
+echo "      every logs/SMOKE_*.out must contain 'successfully transferred!' and end with test metrics;"
+echo "      then: bash logs/sbatch_scripts/e1_training/submit_all.sh"
