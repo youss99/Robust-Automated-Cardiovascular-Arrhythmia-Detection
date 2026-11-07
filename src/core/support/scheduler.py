@@ -60,7 +60,7 @@ class OneCycleLR(AbstractSupportClass):
                                                  final_div_factor=self.final_div_factor,
                                                  three_phase=self.three_phase,
                                                  last_epoch=self.last_epoch,
-                                                 verbose=self.verbose
+                                                 # verbose= was removed from torch schedulers (torch>=2.7); it only printed LRs
                                                  )
         if scheduler_dict:
             self.scheduler.load_state_dict(scheduler_dict)
