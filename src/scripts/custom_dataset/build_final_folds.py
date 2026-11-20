@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Final thesis runs (instructions of 2026-11-20, section 1 "Validation sets"): the lead II fold folders for option 2+.
 
+SUPERSEDED on 2026-11-20 (docs/DECISIONS.md, "Splits"): every learned model now uses one identical split, the V2 option 2+ folders
+cv5_optB_leadV2_opt2p_fold01, 04, 05 (masked record unused for every model). The lead II folders and manifests this script built are
+kept in the repo, but no job uses them; their checksum lines were removed from phase1_folds/SHA256SUMS.txt and link_phase1_h5.sh
+neither checks nor links them. Do not re-run this script (it stops anyway, because its output folders exist).
+
 One validation manifest for every learned model: the published sets plus option 2+ in folds 1, 4, 5.
   lead_V2   phase1_folds/cv5_optB_leadV2_opt2p_fold01,04,05 (existing, R2b): masked V2 record unused, moved record in validation.
   two_lead  the same folders as lead_V2. User decision 2026-11-20: the masked V2 record is unused for the two-lead model too

@@ -4,13 +4,14 @@ Rebuilt from the manifests by `src/scripts/custom_dataset/build_phase1_folds.py`
 
 | Folder | Manifests | Used by |
 |---|---|---|
-| `cv5_optB_fold01`–`05` | `ptbxl_models_v2/cv5_optB_fold_manifests` | R1b, R2 |
-| `cv5_optB_leadV2_opt2p_fold01`, `04`, `05` | `ptbxl_models_v2/cv5_optB_v2models_leadV2_fold_manifests` (`unused` = -1) | R2b |
+| `cv5_optB_fold01`–`05` | `ptbxl_models_v2/cv5_optB_fold_manifests` | R1b, R2; final runs: folds 2, 3 (every learned model) |
+| `cv5_optB_leadV2_opt2p_fold01`, `04`, `05` | `ptbxl_models_v2/cv5_optB_v2models_leadV2_fold_manifests` (`unused` = -1) | R2b; final runs: folds 1, 4, 5 (every learned model, `docs/DECISIONS.md`) |
+| `cv5_optB_leadII_opt2p_fold01`, `04`, `05` | `ptbxl_models_v2/cv5_optB_leadII_opt2p_fold_manifests` | None. Built 2026-11-20 by `build_final_folds.py` for a per-lead split, superseded the same day by one split for every model. Kept; not checked or linked |
 
 Each folder holds `modified_dataset/modified_dataset.csv` and needs the published median H5 (1 GB, not in git). On each machine, once, from the repo root:
 
     bash src/scripts/custom_dataset/link_phase1_h5.sh /path/to/PatientSegmentRegressionDataset.h5
 
-That checks the H5 and the CSVs against `SHA256SUMS.txt` and links the H5 into every folder. Source of the H5 and CSV on the VM: `custom_datasets/ltstdb_regression_median_100hz_nocompress`.
+That checks the H5 and the CSVs against `SHA256SUMS.txt` and links the H5 into the 8 folders that jobs use (not the `cv5_optB_leadII_opt2p` ones). Source of the H5 and CSV on the VM: `custom_datasets/ltstdb_regression_median_100hz_nocompress`.
 
 Check on the VM: all 30 published cv5_optB checkpoints reproduce their saved test MSE on these folders (worst relative difference 0.00062).

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sbatch files for the final thesis runs (instructions of 2026-11-20, steps 1, 2, 2b, 3). Nothing is submitted; this only writes files.
+"""Sbatch files for the final thesis runs (docs/instructions_final_results.md, steps 1, 2, 2b, 3; decisions in docs/DECISIONS.md). Nothing is submitted; this only writes files.
 
   step1   2 jobs  re-pretrain single-lead backbones with the fixed loss: patch_ecg_unified_{ii,v2}_lossfix, via pretrain_unified_v2.sh
                   unchanged (same recipe as the _rebuilt backbones). Pre-training seed: none (single unseeded run per backbone).
@@ -12,10 +12,11 @@
 Seeds (fine-tuning): S1 = 200 + fold - 1 (the published seed, every R2 params.txt), S2 = 300 + fold - 1, S3 = 400 + fold - 1 (user, 2026-11-20).
 Recipe (fine-tuning): R2's params.txt, the same flags as build_phase1_sbatches.py (20 head + 70 full epochs, lr 1e-3, layer decay 0.65,
 weight decay 0.05, batch 128, MSE, valid_loss selection). dry_run_final.py checks every generated job through the real parser against R2.
-Validation manifest (one for every learned model; build_final_folds.py):
-  folds 2, 3           phase1_folds/cv5_optB_fold02, 03 for every model
-  folds 1, 4, 5        lead_II: cv5_optB_leadII_opt2p_fold*; lead_V2 and two_lead: cv5_optB_leadV2_opt2p_fold* (masked V2 record unused,
-                       moved record in validation; two-lead = V2 split by the user's decision of 2026-11-20)
+Splits (docs/DECISIONS.md, 2026-11-20): one identical split for every learned model (lead_II, lead_V2, two_lead; pretrained and supervised):
+  folds 1, 4, 5        phase1_folds/cv5_optB_leadV2_opt2p_fold* (the R2b folders): masked record s20081/s20081/s20241 unused for every model,
+                       moved record s20231/s20071/s20141 in validation. No validation record has a masked lead.
+  folds 2, 3           phase1_folds/cv5_optB_fold02, 03 (published)
+The cv5_optB_leadII_opt2p_fold* folders (build_final_folds.py, an earlier per-lead split) stay in the repo, but no job uses them.
 Every run has its own folder named by run ID (FIN_<pipeline>_<mode>_<seed>_fold<k>); a job stops at once if its data or backbone is missing,
 or if the folder already holds a snapshot, so a resubmission cannot silently resume. job_log.txt in the run folder: run ID, git commit,
 uncommitted files, seed, Slurm job, host, dataset + CSV checksum, backbone + checksum; after training, best epoch and validation loss.
@@ -55,9 +56,8 @@ def seed(s, k):
 
 
 def dataset(mode, k):
-    if k in OPT2P:
-        return f"{DS_ROOT}/cv5_optB_{'leadII' if mode == 'lead_II' else 'leadV2'}_opt2p_fold{k:02d}"
-    return f"{DS_ROOT}/cv5_optB_fold{k:02d}"
+    """One identical split for every learned model: the folder depends on the fold only, never on `mode`."""
+    return f"{DS_ROOT}/{'cv5_optB_leadV2_opt2p_fold' if k in OPT2P else 'cv5_optB_fold'}{k:02d}"
 
 
 def backbone(pipe, mode):
@@ -249,13 +249,16 @@ def main():
                              dataset=dataset(mode, k), backbone=backbone(pipe, mode) or "none", optional=group in ("step2b", "step3o")))
         (d / f"{name}.sbatch").write_text(body)
     with open(OUT / "jobs.csv", "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(rows[0]))
+        w = csv.DictWriter(f, fieldnames=list(rows[0]), lineterminator="\n")   # LF, as every CSV in the repo (.gitattributes text=auto)
         w.writeheader()
         w.writerows(rows)
     (OUT / "submit_final.sh").write_text(SUBMIT % REPO_ROOT)
     counts = {g: sum(r["group"] == g for r in rows) for g in dict.fromkeys(r["group"] for r in rows)}
     assert counts == {"step1": 2, "step2_L1": 30, "step2_L2": 15, "step2b": 10, "step3": 15, "step3o": 30}, counts
     assert len({r["run_id"] for r in rows}) == len(rows)
+    for k in range(1, 6):   # one identical split for every learned model
+        assert len({r["dataset"] for r in rows if r["fold"] == k}) == 1, k
+    assert not any("leadII_opt2p" in r["dataset"] for r in rows)
     print(f"{len(rows)} jobs written to {OUT}: {counts}. Nothing submitted.")
 
 
