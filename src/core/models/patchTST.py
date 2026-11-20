@@ -247,7 +247,9 @@ class PatchTSTEncoder(nn.Module):
         bs, n_vars, num_patch, patch_len = x.shape
         if self.n_vars != n_vars:
             x = torch.reshape(x, shape=(bs, self.n_vars, num_patch * n_vars, patch_len))
-            bs, _, num_patch, patch_len = x.shape
+            # n_vars must follow the reshape: it sets the number of CLS tokens below (it kept the data's lead count,
+            # so leads concatenated into one sequence crashed at pack())
+            bs, n_vars, num_patch, patch_len = x.shape
 
         # Input encoding
         if not self.shared_embedding:

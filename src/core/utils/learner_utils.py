@@ -201,7 +201,14 @@ def transfer_weights(weights_path, model, exclude_head=True, device='cpu'):
             if input_param.shape == param.shape:
                 param.copy_(input_param)
             elif 'pos' in name:
-                param.copy_(input_param[0, param.shape[1], :])
+                # The old fallback copied ONE position's vector into every position (ViT) or raised an IndexError
+                # (PatchTST). A different number of positions means the backbone was pre-trained on a different
+                # input length (e.g. two leads in one sequence vs one lead), so stop instead of guessing.
+                raise ValueError(
+                    f"Positional embedding '{name}' does not match: backbone {tuple(input_param.shape)} vs model "
+                    f"{tuple(param.shape)}. The backbone at {weights_path} was pre-trained with a different number "
+                    f"of patches (different leads, lead mode or patch length). Use a backbone pre-trained with the "
+                    f"same input layout.")
             else:
                 unmatched_layers.append(name)
         else:

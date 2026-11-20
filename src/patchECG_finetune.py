@@ -276,8 +276,14 @@ def prepare_learner(dls, global_rank, local_rank):
     # get model
     model = get_model(c_in=c_in, seq_len=seq_len, args=args, global_rank=global_rank)
     # transfer weights from pre-trained model
-    if args.pretrained_model_path is not None and snapshot_exists(path=os.path.join(ROOT_DIR, args.pretrained_model_path)):
-        model = transfer_weights(os.path.join(ROOT_DIR, args.pretrained_model_path), model)
+    if args.pretrained_model_path is not None:
+        backbone_path = os.path.join(ROOT_DIR, args.pretrained_model_path)
+        if snapshot_exists(path=backbone_path):
+            model = transfer_weights(backbone_path, model)
+        elif (args.finetuning or args.linear_probing) and not args.bootstrapping:
+            # This used to continue silently with random weights (and the layer-decay optimizer of a pretrained run).
+            raise FileNotFoundError(f'--pretrained_model_path does not exist: {backbone_path}. '
+                                    f'Refusing to fine-tune from random weights; omit the flag for a supervised run.')
 
     # Prepare PEFT fine-tuning if true
     if args.lora:

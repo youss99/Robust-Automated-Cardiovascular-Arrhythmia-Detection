@@ -53,8 +53,10 @@ class PatchMaskSupport(AbstractSupportClass):
 
         # Move mask to cuda
         self._binary_mask = _torch_single(get_mask(xb_patch, self.mask_ratio, self._per_lead)).to(device)
-        self._mask = self._binary_mask[:, :, :, :1].squeeze() != 0
-        self._inverted_mask = self._binary_mask[:, :, :, :1].squeeze() == 0
+        # Masks are [bs x n_vars x num_patch]. Index the last axis instead of calling .squeeze(): squeeze also
+        # removed the lead axis for single-lead input, and the loss below then broadcast to [bs x bs x num_patch].
+        self._mask = self._binary_mask[:, :, :, 0] != 0
+        self._inverted_mask = self._binary_mask[:, :, :, 0] == 0
 
         return xb_patch, target, self._mask, self._inverted_mask
 
@@ -70,6 +72,10 @@ class PatchMaskSupport(AbstractSupportClass):
         loss = loss.mean(dim=-1)
         loss = (loss * self._inverted_mask).sum() / self._inverted_mask.sum()
         return loss
+
+    # The value is a mean over the batch's masked patches. TrainingTracker reads this attribute to weight each
+    # batch by its size; without it the logged pre-training loss was the true loss divided by the batch size.
+    _loss.reduction = 'mean'
 
     def get_chunk_patch_indices(self, xb):
         """
