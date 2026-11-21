@@ -1,5 +1,7 @@
 # Final thesis results: instructions for Claude Code
 
+Where this file and DECISIONS.md differ, DECISIONS.md wins.
+
 20 November 2026 (lean version). **Goal:** one frozen set of results for the thesis, collected in `RESULTS_FINAL.md`. **Scope:** the ST-deviation estimator and PROSE alarms on LTST only.
 
 ## Ground rules
@@ -50,12 +52,12 @@
 
 | Step | Where | What | Jobs | Check before moving on |
 |---|---|---|---|---|
-| 0 | Cluster | Pull the fixed code (`b8f688d`) and run the self-test | – | 37/37 |
-| 0b | Cluster | Run `backbone_masked_vs_visible.py` on L2's backbone only (`patch_ecg_unified_ii_v2_rebuilt`), with 2–3 `--seed` values | – | "Does not reproduce visible patches" (expected 1.70 or more; readings move up to about 21% between draws). If it does reproduce them, stop and report |
+| 0 | Cluster | Commit check (HEAD = pushed commit; no modified tracked files) + self-test (`check_training_paths.py`) | – | 37/37 |
+| 0b | Cluster | Run `backbone_masked_vs_visible.py` on L2's backbone only (`patch_ecg_unified_ii_v2_rebuilt`), with 2–3 `--seed` values | – | The pass rule in `docs/DECISIONS.md` (2026-11-20, step 0). If it fails, stop and report |
 | 1 | Cluster | Re-pretrain single-lead backbones for II and V2: `pretrain_unified_v2.sh`, same recipe, new names (e.g. `patch_ecg_unified_{ii,v2}_lossfix`) | 2 | Logged loss starts near 1 and falls; don't compare it with old single-lead logs, which show the mixed loss. `backbone_masked_vs_visible.py` (2–3 seeds) reads "does not reproduce visible patches" |
 | 2 | Cluster | Fine-tune L1 (II, V2) from the step 1 backbones, and L2. Same recipe as R2 | 3 models × 5 folds × 3 seeds = 45 | No resumed snapshots. Report any diverged run. No reproduction run needed: the fix doesn't touch fine-tuning (verified on the VM) |
 | 2b | Cluster | **Optional, only if the cluster has spare capacity:** re-fine-tune L1-rebuilt (II, V2) from the `_rebuilt` backbones under the new manifest, seed S1 | 10 | As step 2 |
-| 3 | Cluster | Train L1-sup and L2-sup, seed S1 (S2 and S3 optional) | 15 (+30 optional) | Report any diverged run (R1b had 3 diverged supervised lead II runs) |
+| 3 | Cluster | Train L1-sup and L2-sup, seeds S1–S3 | 45 | Report any diverged run (R1b had 3 diverged supervised lead II runs) |
 | 4 | VM | R-peak cache: rodrigues2021 on clean signal and on noisy seeds 42, 43, 44 | – | Spot-check against `.atr`. Reuse existing seed 42/43 outputs only if the setup is identical |
 | 5 | VM | NK-PR and NK-FP: clean + seeds 42–44. NK-FP-nk and NK-PR-pub: seed 42 | – | Report the fitted *a*, *b* per fold and lead. Time one seed first |
 | 6 | VM | Inference: out-of-fold predictions, clean and noisy | – | Window counts match the published runs |
@@ -67,7 +69,7 @@
 | Pipelines | Training seeds | Noise seeds |
 |---|---|---|
 | L1, L2 | S1 (the published seed), S2, S3 | 42 for all three; 42–44 for S1 (robustness) |
-| L1-sup, L2-sup | S1 (S2, S3 optional) | 42 |
+| L1-sup, L2-sup | S1–S3 | 42 |
 | NK-PR, NK-FP | – (deterministic) | 42–44 |
 | All other ablations | Published seed only | 42 |
 

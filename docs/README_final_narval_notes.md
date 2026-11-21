@@ -7,6 +7,8 @@ Ground rules from the instructions: ask before guessing; never overwrite data, c
 ## Setup
 
 1. `git status` clean, then pull `update-initial-changes-with-Mitch`. Record the commit.
+
+   **Remote names:** the fork (github.com/youss99) is named `origin` on Narval and `my-fork` on the VM; both use branch `update-initial-changes-with-Mitch`.
 2. Link the published median H5 into the 8 fold folders the jobs use:
    `bash src/scripts/custom_dataset/link_phase1_h5.sh /path/to/PatientSegmentRegressionDataset.h5`. It checks the H5 and those folders' CSVs against `phase1_folds/SHA256SUMS.txt`. The three `cv5_optB_leadII_opt2p_fold*` folders stay in the repo but are not used, checked or linked.
 
@@ -57,7 +59,7 @@ Write every report to `docs/reports/<date>_<step>.md` and push it, so the VM can
 - `<date>_training.md`, once all approved training has finished: the step 1 checks (first and last logged loss; three backbone-tool readings per backbone), the `step2_L1` submission, and one table with each run's best epoch and best validation loss (from `job_log.txt`). Flag NaN losses, failed jobs, and any run far from its peers (R1b had 3 diverged supervised lead II runs).
 - A failed check or a diverged run gets its own report straight away (for example `<date>_step1.md`), and the affected group stops.
 
-Commit only the report file, then `git pull --rebase my-fork update-initial-changes-with-Mitch` and `git push my-fork update-initial-changes-with-Mitch`.
+Commit only the report file, then `git pull --rebase origin update-initial-changes-with-Mitch` and `git push origin update-initial-changes-with-Mitch` (on Narval the fork is `origin`).
 
 ## Copy back
 
