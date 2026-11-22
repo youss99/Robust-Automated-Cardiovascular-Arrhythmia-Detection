@@ -4,7 +4,8 @@
 hyperparams  docs/thesis_tables/appendix_hyperparams.tex: pre-training and fine-tuning settings read from params.txt, one column per model type
              (pre-training: single-lead backbones II and V2, two-lead backbone; fine-tuning: L1, L2, L1-sup, L2-sup). Every fine-tuning run's
              params.txt is parsed (90); a value is printed only if it is the same in every run of that type (seed: the per-type set). The two-lead
-             backbone's params.txt is not on the VM (only checker test fixtures in an old scratchpad, which are not evidence): its column shows "n/a".
+             backbone's params.txt is not on the VM: its text, copied from Narval on 2026-11-22 (read-only check), is in
+             docs/reports/2026-11-22_narval_ii_v2_rebuilt_params.txt; it must differ from ii_lossfix only in the lead, run name and paths.
 per_record   docs/thesis_tables/appendix_per_record.tex: per record and lead, gated (artifact seed 42, SQI 6 dB from rodrigues2021 peaks), the
              GS episodes and TP / FP / FN of Fiducial-FP (NK-FP), L1 (S1) and L2 (S1), each lead scored on its own episodes (own-lead scope:
              that lead's alarms against that lead's episodes; the scorer's own_II / own_V2), plus the MAE on the windows the gate keeps
@@ -105,13 +106,17 @@ def value(runs, key):
 def hyperparams():
     pre = {"II": parse(BB / "patch_ecg_unified_ii_lossfix/params.txt"), "V2": parse(BB / "patch_ecg_unified_v2_lossfix/params.txt")}
     diff = sorted(k for k in pre["II"] if pre["II"][k] != pre["V2"].get(k))
+    two = parse(REPO / "docs/reports/2026-11-22_narval_ii_v2_rebuilt_params.txt")
+    diff2 = sorted(k for k in set(two) | set(pre["II"]) if two.get(k) != pre["II"].get(k))
+    assert set(two) == set(pre["II"]) and diff2 == ["custom_lead_selection", "model_name", "root_path", "save_path"], diff2
     ft = {}
     for p in sorted(FT.glob("FIN_*/params.txt")):
         typ = re.match(r"FIN_(L1sup|L2sup|L1|L2)_", p.parent.name).group(1)
         ft.setdefault(typ, []).append(parse(p))
     assert {t: len(v) for t, v in ft.items()} == {"L1": 30, "L2": 15, "L1sup": 30, "L2sup": 15}, {t: len(v) for t, v in ft.items()}
     cols = ["pre_single", "pre_two", "L1", "L2", "L1sup", "L2sup"]
-    table, lines = [], [f"pre-training II vs V2 backbone params.txt differ only in: {diff}"]
+    table, lines = [], [f"pre-training II vs V2 backbone params.txt differ only in: {diff}",
+                        f"PASS  two-lead backbone (Narval copy) vs ii_lossfix: same 77-key set, differ only in {diff2}"]
     for sec, lab, kp, kf, _ in ROWS:
         row = dict(section=sec, parameter=lab)
         if kp is None:
@@ -122,7 +127,7 @@ def hyperparams():
             v = value([pre["II"], pre["V2"]], kp)
             assert v is not None, (lab, kp)
             row["pre_single"] = v
-        row["pre_two"] = "II, V2" if kp == "custom_lead_selection" else ("--" if kp is None else "n/a")
+        row["pre_two"] = "II, V2" if kp == "custom_lead_selection" else ("--" if kp is None else value([two], kp))
         for t in ("L1", "L2", "L1sup", "L2sup"):
             runs = ft[t]
             if kf == "seed":
@@ -160,8 +165,9 @@ def hyperparams():
               body,
               "Values read from \\texttt{params.txt}: the two single-lead backbones (\\texttt{ii\\_lossfix}, \\texttt{v2\\_lossfix}; identical except the lead) and all 90 "
               "fine-tuning runs; a value is shown when it is the same in every run of the column; --: not shown for that stage. Fine-tuning epochs: head only, then full network. "
-              "Seeds: S1 = 200, S2 = 300, S3 = 400, plus fold $-$ 1. Two-lead backbone (\\texttt{ii\\_v2\\_rebuilt}): its \\texttt{params.txt} is on the cluster "
-              "only (n/a); its windows: Table~\\ref{tab:t0_pretraining}.", size="\\scriptsize")
+              "Seeds: S1 = 200, S2 = 300, S3 = 400, plus fold $-$ 1. Two-lead backbone (\\texttt{ii\\_v2\\_rebuilt}): \\texttt{params.txt} read on the cluster; it differs from the single-lead backbones "
+              "only in the leads. It was trained on 2026-11-06, before the pre-training loss fix (commit b8f688d); the fix does not change "
+              "pre-training with two or more leads, and the backbone check (step 0b) passed. Windows: Table~\\ref{tab:t0_pretraining}.", size="\\scriptsize")
     (OUT / "HYPERPARAMS_CHECKS.txt").write_text("\n".join(lines) + "\n")
     print("\n".join(lines))
     return True
