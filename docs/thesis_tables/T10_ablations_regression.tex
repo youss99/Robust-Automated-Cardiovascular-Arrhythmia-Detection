@@ -1,0 +1,36 @@
+% T10_ablations_regression: generated 2026-11-21 22:55:54 by Tasks/final/fin_step7_t10_fig1.py (VM). Needs \usepackage{booktabs}.
+\begin{table}[htbp]
+\centering
+\small
+\caption{Ablations A1--A3: ST-deviation regression on all 10\,s windows, clean signal (T10a).}
+\label{tab:t10_regression}
+\begin{tabular}{llllrrrrrrrr}
+\toprule
+Abl. & Lead & Pipeline & Seeds & Cov.\ (\%) & MAE (mV) & Bias (mV) & RMSE (mV) & Slope & $r$ & p100 (\%) & $R^2$ \\
+\midrule
+A1 & II & L1 & S1--S3 & 100.0 $\pm$ 0.0 & 0.0288 $\pm$ 0.0003 & 0.0033 $\pm$ 0.0010 & 0.0429 $\pm$ 0.0005 & 0.702 $\pm$ 0.016 & 0.928 $\pm$ 0.002 & 4.7 $\pm$ 0.8 & 0.830 $\pm$ 0.004 \\
+A1 & II & L1-sup & S1--S3 & 100.0 $\pm$ 0.0 & 0.0366 $\pm$ 0.0007 & 0.0070 $\pm$ 0.0008 & 0.0573 $\pm$ 0.0014 & 0.603 $\pm$ 0.014 & 0.849 $\pm$ 0.013 & 8.0 $\pm$ 0.2 & 0.696 $\pm$ 0.015 \\
+A1 & II & L2 & S1--S3 & 100.0 $\pm$ 0.0 & 0.0290 $\pm$ 0.0018 & 0.0020 $\pm$ 0.0023 & 0.0444 $\pm$ 0.0016 & 0.661 $\pm$ 0.011 & 0.931 $\pm$ 0.008 & 5.1 $\pm$ 0.3 & 0.817 $\pm$ 0.013 \\
+A1 & II & L2-sup & S1--S3 & 100.0 $\pm$ 0.0 & 0.0358 $\pm$ 0.0009 & 0.0020 $\pm$ 0.0009 & 0.0585 $\pm$ 0.0034 & 0.567 $\pm$ 0.018 & 0.846 $\pm$ 0.028 & 6.6 $\pm$ 0.6 & 0.684 $\pm$ 0.037 \\
+A2 & II & L1 & S1--S3 & 100.0 $\pm$ 0.0 & 0.0288 $\pm$ 0.0003 & 0.0033 $\pm$ 0.0010 & 0.0429 $\pm$ 0.0005 & 0.702 $\pm$ 0.016 & 0.928 $\pm$ 0.002 & 4.7 $\pm$ 0.8 & 0.830 $\pm$ 0.004 \\
+A2 & II & L1-old & published & 100.0 & 0.0307 & 0.0014 & 0.0465 & 0.655 & 0.918 & 6.4 & 0.801 \\
+A3 & II & NK-FP & - & 100.0 & 0.0127 & $-$0.0039 & 0.0181 & 0.948 & 0.986 & 0.0 & 0.970 \\
+A3 & II & NK-FP-nk & - & 100.0 & 0.0126 & $-$0.0046 & 0.0190 & 0.937 & 0.985 & 0.1 & 0.967 \\
+A3 & II & NK-PR & - & 80.7 & 0.0347 & $-$0.0309 & 0.0639 & 0.935 & 0.851 & 7.5 & 0.561 \\
+A3 & II & NK-PR-pub & - & 79.9 & 0.0355 & $-$0.0317 & 0.0645 & 0.936 & 0.845 & 7.6 & 0.531 \\
+\midrule
+A1 & V2 & L1 & S1--S3 & 100.0 $\pm$ 0.0 & 0.0355 $\pm$ 0.0003 & 0.0077 $\pm$ 0.0006 & 0.0444 $\pm$ 0.0002 & 0.374 $\pm$ 0.012 & 0.502 $\pm$ 0.006 & 2.6 $\pm$ 0.4 & 0.168 $\pm$ 0.006 \\
+A1 & V2 & L1-sup & S1--S3 & 100.0 $\pm$ 0.0 & 0.0331 $\pm$ 0.0003 & 0.0046 $\pm$ 0.0004 & 0.0425 $\pm$ 0.0004 & 0.405 $\pm$ 0.017 & 0.540 $\pm$ 0.001 & 2.4 $\pm$ 0.2 & 0.238 $\pm$ 0.016 \\
+A1 & V2 & L2 & S1--S3 & 100.0 $\pm$ 0.0 & 0.0290 $\pm$ 0.0011 & 0.0020 $\pm$ 0.0007 & 0.0368 $\pm$ 0.0011 & 0.389 $\pm$ 0.037 & 0.659 $\pm$ 0.027 & 0.7 $\pm$ 0.3 & 0.427 $\pm$ 0.036 \\
+A1 & V2 & L2-sup & S1--S3 & 100.0 $\pm$ 0.0 & 0.0349 $\pm$ 0.0006 & $-$0.0010 $\pm$ 0.0014 & 0.0441 $\pm$ 0.0007 & 0.336 $\pm$ 0.018 & 0.480 $\pm$ 0.021 & 2.7 $\pm$ 0.4 & 0.181 $\pm$ 0.027 \\
+A2 & V2 & L1 & S1--S3 & 100.0 $\pm$ 0.0 & 0.0355 $\pm$ 0.0003 & 0.0077 $\pm$ 0.0006 & 0.0444 $\pm$ 0.0002 & 0.374 $\pm$ 0.012 & 0.502 $\pm$ 0.006 & 2.6 $\pm$ 0.4 & 0.168 $\pm$ 0.006 \\
+A2 & V2 & L1-old & published & 100.0 & 0.0384 & 0.0154 & 0.0466 & 0.316 & 0.473 & 2.6 & 0.085 \\
+A3 & V2 & NK-FP & - & 100.0 & 0.0109 & $-$0.0043 & 0.0197 & 1.041 & 0.936 & 0.1 & 0.837 \\
+A3 & V2 & NK-FP-nk & - & 100.0 & 0.0323 & 0.0174 & 0.1176 & 0.922 & 0.360 & 4.7 & $-$4.832 \\
+A3 & V2 & NK-PR & - & 75.0 & 0.0441 & $-$0.0415 & 0.0588 & 0.672 & 0.663 & 8.8 & $-$0.361 \\
+A3 & V2 & NK-PR-pub & - & 88.4 & 0.0433 & $-$0.0405 & 0.0582 & 0.626 & 0.637 & 8.8 & $-$0.387 \\
+\bottomrule
+\end{tabular}
+
+\par\smallskip\footnotesize Each ablation row follows the row it is compared with. A1: supervised, no pre-trained backbone. A2: L1-old = published CMBEC single-lead models. A3: NK-FP-nk = fixed point on NeuroKit's own R-peaks; NK-PR-pub = published paper-rule values. Masked record--lead pairs excluded; S1--S3: mean $\pm$ SD over training seeds.
+\end{table}
