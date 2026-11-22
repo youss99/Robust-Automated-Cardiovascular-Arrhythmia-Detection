@@ -5,7 +5,7 @@ Frozen setup: `docs/instructions_final_results.md` and `docs/DECISIONS.md`. Prov
 <!-- tier1 -->
 ## Tier 1 (T1, T5, T7)
 
-Generated 2026-11-21 22:45:34 by `Tasks/final/fin_step7_tier1.py` (VM). 15 records, 101 ST-deviation episodes (MON: 99, as published). Learned rows: mean ± SD (ddof 1) over training seeds S1–S3; per-seed values in `Tasks/final/runs/step7/`. Noise: NSTDB `em`, seed 42. Gate: the paper's SQI from rodrigues2021 peaks on the noisy signal, 6 dB.
+Generated 2026-11-21 22:45:34 by `src/scripts/final/fin_step7_tier1.py` (VM). 15 records, 101 ST-deviation episodes (MON: 99, as published). Learned rows: mean ± SD (ddof 1) over training seeds S1–S3; per-seed values in `Tasks/final/runs/step7/`. Noise: NSTDB `em`, seed 42. Gate: the paper's SQI from rodrigues2021 peaks on the noisy signal, 6 dB.
 
 Control (published R1 predictions through this alarm path, `.atr` gate): all 6 conditions reproduce the paper.
 
@@ -100,7 +100,7 @@ From the T5 rows above (mean ± SD over S1–S3). Temporal metrics: IoU, duratio
 <!-- t10 -->
 ## T10. Ablations A1–A4
 
-Generated 2026-11-21 22:55:54 by `Tasks/final/fin_step7_t10_fig1.py` (VM). Noise seed 42. Same alarm path, scorer, labels and gate tables as tier 1; rows marked S1–S3 are mean ± SD over the training seeds (A1, and L1 in A2), others one run. Each ablation row sits under the row it is compared with. L1-rebuilt (A2, optional) was not run: step 2b was not submitted.
+Generated 2026-11-21 22:55:54 by `src/scripts/final/fin_step7_t10_fig1.py` (VM). Noise seed 42. Same alarm path, scorer, labels and gate tables as tier 1; rows marked S1–S3 are mean ± SD over the training seeds (A1, and L1 in A2), others one run. Each ablation row sits under the row it is compared with. L1-rebuilt (A2, optional) was not run: step 2b was not submitted.
 
 Controls: published M1 and M2-R through this alarm path reproduce phase 1's stored counts (5 / 5); the 6 dB point of the sweep equals tier 1 (3 / 3).
 
@@ -223,7 +223,7 @@ Every 5 dB shown; all 46 thresholds (−20 to +25 dB, 1 dB steps) in `Tasks/fina
 <!-- fig1 -->
 ## Fig. 1. Bland–Altman (clean, DMY beats)
 
-Generated 2026-11-21 22:55:54 by `Tasks/final/fin_step7_t10_fig1.py` (VM). Figure: `docs/thesis_figures/Fig1_bland_altman.pdf`. Label = the DMY beat's expert ST deviation; estimate = the 10 s window containing the beat (as phase 1's set B and C §9); masked pairs out. LoA = bias ± 1.96 SD of the difference; slope = OLS of the difference on the mean (negative = compression of large deviations).
+Generated 2026-11-21 22:55:54 by `src/scripts/final/fin_step7_t10_fig1.py` (VM). Figure: `docs/thesis_figures/Fig1_bland_altman.pdf`. Label = the DMY beat's expert ST deviation; estimate = the 10 s window containing the beat (as phase 1's set B and C §9); masked pairs out. LoA = bias ± 1.96 SD of the difference; slope = OLS of the difference on the mean (negative = compression of large deviations).
 
 | lead | pipeline | n beats | bias (mV) | SD (mV) | 95 % LoA (mV) | slope (diff on mean) | MAE (mV) |
 |---|---|--:|--:|--:|---|--:|--:|
@@ -238,7 +238,7 @@ Generated 2026-11-21 22:55:54 by `Tasks/final/fin_step7_t10_fig1.py` (VM). Figur
 <!-- t2 -->
 ## T2. Regression, DMY beats (clean)
 
-Generated 2026-11-22 00:24:16 by `Tasks/final/fin_step7_rest.py` (VM). DMY beats (label = the beat's expert ST deviation); estimate = the 10 s window containing the beat (C §9, phase 1's set B); masked pairs excluded; T1's metrics; coverage = share of DMY beats with a value. L1, L2: mean ± SD over S1–S3.
+Generated 2026-11-22 00:24:16 by `src/scripts/final/fin_step7_rest.py` (VM). DMY beats (label = the beat's expert ST deviation); estimate = the 10 s window containing the beat (C §9, phase 1's set B); masked pairs excluded; T1's metrics; coverage = share of DMY beats with a value. L1, L2: mean ± SD over S1–S3.
 
 | lead | pipeline | coverage % | n | MAE (mV) | bias (mV) | RMSE (mV) | slope | r | p100 % | R² |
 |---|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -257,7 +257,7 @@ DMY beats per lead (masked pairs out): II 1,702, V2 1,425.
 <!-- t3 -->
 ## T3. Error by true ST band (clean)
 
-Generated 2026-11-22 00:24:59 by `Tasks/final/fin_step7_rest.py` (VM). Set A windows (as T1), masked pairs excluded, banded by |label| (lower bound inclusive). Bias = estimate − label; shrinkage = mean of −sign(label) × (estimate − label), positive when the estimate is closer to 0 than the label. Bands partition the labelled windows: yes. L1, L2: mean ± SD over S1–S3.
+Generated 2026-11-22 00:24:59 by `src/scripts/final/fin_step7_rest.py` (VM). Set A windows (as T1), masked pairs excluded, banded by |label| (lower bound inclusive). Bias = estimate − label; shrinkage = mean of −sign(label) × (estimate − label), positive when the estimate is closer to 0 than the label. Bands partition the labelled windows: yes. L1, L2: mean ± SD over S1–S3.
 
 | lead | \|ST\| band (mV) | windows (% of lead) | pipeline | n with value | MAE (mV) | bias (mV) | shrinkage (mV) |
 |---|---|--:|---|--:|--:|--:|--:|
@@ -298,7 +298,7 @@ Generated 2026-11-22 00:24:59 by `Tasks/final/fin_step7_rest.py` (VM). Set A win
 <!-- t4 -->
 ## T4. Noise robustness (NSTDB `em`, seed 42)
 
-Generated 2026-11-22 00:25:19 by `Tasks/final/fin_step7_rest.py` (VM). Noisy estimates against the clean labels, set A windows, masked pairs excluded. Gated = windows the 6 dB SQI gate (rodrigues2021 peaks, at the learned grid anchor) keeps, the same windows for every pipeline (as T7). Bursts = windows entirely inside a burst of the seed-42 contamination log. n = windows with a value. L1, L2: mean ± SD over S1–S3.
+Generated 2026-11-22 00:25:19 by `src/scripts/final/fin_step7_rest.py` (VM). Noisy estimates against the clean labels, set A windows, masked pairs excluded. Gated = windows the 6 dB SQI gate (rodrigues2021 peaks, at the learned grid anchor) keeps, the same windows for every pipeline (as T7). Bursts = windows entirely inside a burst of the seed-42 contamination log. n = windows with a value. L1, L2: mean ± SD over S1–S3.
 
 | lead | pipeline | ungated MAE (mV) | n | ungated burst MAE (mV) | n | gated MAE (mV) | n | gated burst MAE (mV) | n |
 |---|---|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -317,7 +317,7 @@ Labelled windows: II 110,783 (bursts 14,754), gate keeps 86,707 (bursts 11); V2 
 <!-- t6 -->
 ## T6. Alarm robustness across noise seeds (gated)
 
-Generated 2026-11-22 00:26:08 by `Tasks/final/fin_step7_rest.py` (VM). NSTDB `em` seeds 42, 43, 44, each with its own noisy signal, predictions, NeuroKit values and SQI gate (rodrigues2021 peaks, 6 dB). Union, FULL scope. Mean ± SD (ddof 1) over the three noise seeds; L1, L2: training seed S1. Check: seed 42 equals the tier-1 gated rows (4 / 4).
+Generated 2026-11-22 00:26:08 by `src/scripts/final/fin_step7_rest.py` (VM). NSTDB `em` seeds 42, 43, 44, each with its own noisy signal, predictions, NeuroKit values and SQI gate (rodrigues2021 peaks, 6 dB). Union, FULL scope. Mean ± SD (ddof 1) over the three noise seeds; L1, L2: training seed S1. Check: seed 42 equals the tier-1 gated rows (4 / 4).
 
 | pipeline | TP | FP | FN | F1 | false-alarm h | per seed 42 / 43 / 44: TP / FP / FN |
 |---|--:|--:|--:|--:|--:|---|
@@ -330,7 +330,7 @@ Generated 2026-11-22 00:26:08 by `Tasks/final/fin_step7_rest.py` (VM). NSTDB `em
 <!-- data -->
 ## Data
 
-Generated 2026-11-22 01:32:48 by `Tasks/final/fin_step7_data_ceiling.py` (VM). Pre-training: Unified v2 (`Unified_Dataset_No_PTB_Segment_v2`, 58,942 10 s windows at 100 Hz from Chapman and CinC 2020, md5 `ac56fd0e…`); rows where a selected lead is blank are removed. Fine-tuning: the fold dataset CSVs (`phase1_folds/`), one split for every learned model; a window is a 10 s segment of the median LTST signal with both targets (every row has both). Masked record–lead pairs are in the training rows (their targets are present) and are excluded from scoring; gold-standard episodes: 69 lead II + 32 lead V2 = 101, none on a masked pair.
+Generated 2026-11-22 01:32:48 by `src/scripts/final/fin_step7_data_ceiling.py` (VM). Pre-training: Unified v2 (`Unified_Dataset_No_PTB_Segment_v2`, 58,942 10 s windows at 100 Hz from Chapman and CinC 2020, md5 `ac56fd0e…`); rows where a selected lead is blank are removed. Fine-tuning: the fold dataset CSVs (`phase1_folds/`), one split for every learned model; a window is a 10 s segment of the median LTST signal with both targets (every row has both). Masked record–lead pairs are in the training rows (their targets are present) and are excluded from scoring; gold-standard episodes: 69 lead II + 32 lead V2 = 101, none on a masked pair.
 
 ### Pre-training set
 
@@ -371,7 +371,7 @@ Note: the CSVs hold the windows the trainer used (step 6 reproduced every saved 
 <!-- ceiling -->
 ## Gold-standard ceiling (baseline)
 
-Generated 2026-11-22 01:22:12 by `Tasks/final/fin_step7_data_ceiling.py` (VM). The true window labels (set A: median `.16a` `ee` of each 10 s grid window, anchors 2500k + 2499) through the same FSM and scorer as T5, baseline condition (no noise, no gate), masked pairs excluded, union of II and V2. It is the score of a perfect window-level estimator under this FSM. Control: equals phase 1's oracle union (yes).
+Generated 2026-11-22 01:22:12 by `src/scripts/final/fin_step7_data_ceiling.py` (VM). The true window labels (set A: median `.16a` `ee` of each 10 s grid window, anchors 2500k + 2499) through the same FSM and scorer as T5, baseline condition (no noise, no gate), masked pairs excluded, union of II and V2. It is the score of a perfect window-level estimator under this FSM. Control: equals phase 1's oracle union (yes).
 
 | pipeline | TP | FP | FN | precision | recall | F1 | IoU | false-alarm h | duration Se | duration +P | redundant |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -387,7 +387,7 @@ With the true labels as input, the 1 missed episode and 9 false alarms reflect d
 <!-- ceiling_inputs -->
 ### Ceiling note: how each system feeds the FSM (written by hand, 2026-11-22)
 
-Checked in the code (`Tasks/final/fin_step5_nk.py`, `Tasks/C_neurokit/c13_fp_gap.segments`, `c20b_paper_rule.paper_beats`,
+Checked in the code (`src/scripts/final/fin_step5_nk.py`, `Tasks/C_neurokit/c13_fp_gap.segments`, `c20b_paper_rule.paper_beats`,
 `ltst_pipeline/old_fsm_gs.run_fsm_on_record`). Every final system feeds the FSM **one value per 10 s window, never per beat**, on the same grid
 (windows [2500k, 2500k + 2500)), so the ceiling applies to all four.
 

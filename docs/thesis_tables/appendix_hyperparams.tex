@@ -1,0 +1,52 @@
+% appendix_hyperparams: generated 2026-11-22 01:44:09 by src/scripts/final/fin_step7_appendix.py (VM). Needs \usepackage{booktabs}.
+\begin{table}[htbp]
+\centering
+\scriptsize
+\caption{Pre-training and fine-tuning settings (from each run's \texttt{params.txt}).}
+\label{tab:appendix_hyperparams}
+\begin{tabular}{p{3.6cm}p{2.1cm}p{1.4cm}p{1.8cm}p{1.8cm}p{1.8cm}p{1.8cm}}
+\toprule
+Parameter & \multicolumn{2}{c}{Pre-training (Unified v2)} & \multicolumn{4}{c}{Fine-tuning (LTST)} \\
+ & Single-lead & Two-lead & L1 & L2 & L1-sup & L2-sup \\
+\midrule
+\multicolumn{7}{l}{\textit{Architecture}} \\
+Encoder & vanilla\_vit & n/a & vanilla\_vit & vanilla\_vit & vanilla\_vit & vanilla\_vit \\
+Transformer layers / heads & 6 / 8 & n/a & 6 / 8 & 6 / 8 & 6 / 8 & 6 / 8 \\
+Model dim.\ / feed-forward dim. & 128 / 512 & n/a & 128 / 512 & 128 / 512 & 128 / 512 & 128 / 512 \\
+Patch length / stride (samples) & 50 / 50 & n/a & 50 / 50 & 50 / 50 & 50 / 50 & 50 / 50 \\
+Dropout / head dropout & 0 / 0 & n/a & 0 / 0 & 0 / 0 & 0 / 0 & 0 / 0 \\
+Shared patch embedding & True & n/a & True & True & True & True \\
+Normalisation (RevIN mode) / scaler & BN / standard & n/a & BN / standard & BN / standard & BN / standard & BN / standard \\
+Head & PRETRAIN & n/a & REGRESSION / CLS\_TOKEN & REGRESSION / CLS\_TOKEN & REGRESSION / CLS\_TOKEN & REGRESSION / CLS\_TOKEN \\
+\midrule
+\multicolumn{7}{l}{\textit{Input}} \\
+Leads & II or V2 (one backbone each) & II, V2 & II or V2 (one model each) & II, V2 & II or V2 (one model each) & II, V2 \\
+Context points & 5000 & n/a & 5000 & 5000 & 5000 & 5000 \\
+\midrule
+\multicolumn{7}{l}{\textit{Objective}} \\
+Mask ratio & 0.4 & n/a & -- & -- & -- & -- \\
+Noise masking / zero-noise mixing & False / 0.5 & n/a & -- & -- & -- & -- \\
+Loss & -- & -- & mse & mse & mse & mse \\
+Data augmentation & none & n/a & none & none & none & none \\
+\midrule
+\multicolumn{7}{l}{\textit{Optimisation}} \\
+Optimiser & adamw & n/a & adamw & adamw & adamw & adamw \\
+Betas / eps & (0.9, 0.999) / 1e-08 & n/a & None / 1e-08 & None / 1e-08 & None / 1e-08 & None / 1e-08 \\
+Learning rate & 0.0015 & n/a & 0.001 & 0.001 & 0.001 & 0.001 \\
+Layer-wise LR decay & 1 & n/a & 0.65 & 0.65 & 0.65 & 0.65 \\
+Weight decay & 0.05 & n/a & 0.05 & 0.05 & 0.05 & 0.05 \\
+Scheduler & True & n/a & False & False & False & False \\
+Warm-up epochs / warm-up LR / min.\ LR & 2 / 1e-06 / 1e-05 & n/a & 2 / 1e-06 / 1e-06 & 2 / 1e-06 / 1e-06 & 2 / 1e-06 / 1e-06 & 2 / 1e-06 / 1e-06 \\
+Batch size & 128 & n/a & 128 & 128 & 128 & 128 \\
+Epochs & 500 & n/a & 20 / 70 & 20 / 70 & 20 / 70 & 20 / 70 \\
+SAM & False & n/a & False & False & False & False \\
+Model selection & -- & -- & valid\_loss & valid\_loss & valid\_loss & valid\_loss \\
+\midrule
+\multicolumn{7}{l}{\textit{Initialisation}} \\
+Backbone & -- & -- & ii\_lossfix, v2\_lossfix & ii\_v2\_rebuilt & none (random init.) & none (random init.) \\
+Seed & -- & -- & 200--404 (3 seeds $\times$ 5 folds) & 200--404 (3 seeds $\times$ 5 folds) & 200--404 (3 seeds $\times$ 5 folds) & 200--404 (3 seeds $\times$ 5 folds) \\
+\bottomrule
+\end{tabular}
+
+\par\smallskip\footnotesize Values read from \texttt{params.txt}: the two single-lead backbones (\texttt{ii\_lossfix}, \texttt{v2\_lossfix}; identical except the lead) and all 90 fine-tuning runs; a value is shown when it is the same in every run of the column; --: not shown for that stage. Fine-tuning epochs: head only, then full network. Seeds: S1 = 200, S2 = 300, S3 = 400, plus fold $-$ 1. Two-lead backbone (\texttt{ii\_v2\_rebuilt}): its \texttt{params.txt} is on the cluster only (n/a); its windows: Table~\ref{tab:t0_pretraining}.
+\end{table}

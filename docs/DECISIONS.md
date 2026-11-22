@@ -20,3 +20,4 @@
 - 2026-11-21  All 92 training jobs completed (report: 2026-11-20_training.md). Code freeze lifted.
 - 2026-11-21  Checkpoint selection unchanged (best validation loss) everywhere, including L1-V2 fold 1, where all three seeds chose head-only checkpoints. Not adjusted after seeing it.
 - 2026-11-21  Plan frozen. No new runs, models or checks unless something fails. Scoring order: T1, T5, T7 first; then T10 and Fig. 1; the rest only if time allows.
+- 2026-11-22  Terminology: follow the CMBEC paper ("ischemic episodes"; Monitor / Fiducial / Learned; baseline / artifact / gated), with GS episodes defined once as periods meeting the PROSE criteria on the annotated .16a ST deviation. Replaces the 2026-11-20 "ST-deviation episodes" rule.

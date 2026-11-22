@@ -24,7 +24,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, "/home/student/GIT/Tasks/final")
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # the other final drivers
 import fin_step7_tier1 as T  # noqa: E402  (patches the SQI call exactly as tier 1 did)
 
 P, K = T.P, T.K
@@ -314,7 +314,7 @@ def seeds_of(q):
 def md_t10(A, Rg, GM, S, ctl, chk):
     pm = T.pm
     out = ["## T10. Ablations A1–A4", "",
-           f"Generated {time.strftime('%F %T')} by `Tasks/final/fin_step7_t10_fig1.py` (VM). Noise seed 42. Same alarm path, scorer, labels and gate tables as tier 1; "
+           f"Generated {time.strftime('%F %T')} by `src/scripts/final/fin_step7_t10_fig1.py` (VM). Noise seed 42. Same alarm path, scorer, labels and gate tables as tier 1; "
            "rows marked S1–S3 are mean ± SD over the training seeds (A1, and L1 in A2), others one run. Each ablation row sits under the row it is compared with. "
            "L1-rebuilt (A2, optional) was not run: step 2b was not submitted.", "",
            "Controls: " + ("published M1 and M2-R through this alarm path reproduce phase 1's stored counts (5 / 5); the 6 dB point of the sweep equals tier 1 (3 / 3)."
@@ -353,7 +353,7 @@ def md_t10(A, Rg, GM, S, ctl, chk):
 
 def md_fig1(St):
     out = ["## Fig. 1. Bland–Altman (clean, DMY beats)", "",
-           f"Generated {time.strftime('%F %T')} by `Tasks/final/fin_step7_t10_fig1.py` (VM). Figure: `docs/thesis_figures/Fig1_bland_altman.pdf`. "
+           f"Generated {time.strftime('%F %T')} by `src/scripts/final/fin_step7_t10_fig1.py` (VM). Figure: `docs/thesis_figures/Fig1_bland_altman.pdf`. "
            "Label = the DMY beat's expert ST deviation; estimate = the 10 s window containing the beat (as phase 1's set B and C §9); masked pairs out. "
            "LoA = bias ± 1.96 SD of the difference; slope = OLS of the difference on the mean (negative = compression of large deviations).", "",
            "| lead | pipeline | n beats | bias (mV) | SD (mV) | 95 % LoA (mV) | slope (diff on mean) | MAE (mV) |", "|---|---|--:|--:|--:|---|--:|--:|"]
@@ -366,7 +366,7 @@ def md_fig1(St):
 
 def tex_write(name, caption, label, colspec, header, body, note):
     T.TEX.mkdir(parents=True, exist_ok=True)
-    lines = [f"% {name}: generated {time.strftime('%F %T')} by Tasks/final/fin_step7_t10_fig1.py (VM). Needs \\usepackage{{booktabs}}.",
+    lines = [f"% {name}: generated {time.strftime('%F %T')} by src/scripts/final/fin_step7_t10_fig1.py (VM). Needs \\usepackage{{booktabs}}.",
              "\\begin{table}[htbp]", "\\centering", "\\small", f"\\caption{{{caption}}}", f"\\label{{{label}}}",
              f"\\begin{{tabular}}{{{colspec}}}", "\\toprule", header + " \\\\", "\\midrule"]
     for row in body:
@@ -460,7 +460,7 @@ def main():
     md_t10(A, Rg, GM, S, ctl, chk)
     md_fig1(St)
     tex_all(A, Rg, GM, S, St)
-    shutil.copy2(__file__, FIG / "fin_step7_t10_fig1.py")  # every figure with the script that made it
+    # the script that made the figures is this file, src/scripts/final/fin_step7_t10_fig1.py (no copy next to the PDFs)
     (OUT / "DONE_t10").write_text(time.strftime("%F %T") + "\n")
     log("done")
     return True
