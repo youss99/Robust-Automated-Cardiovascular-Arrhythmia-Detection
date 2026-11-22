@@ -298,7 +298,8 @@ def md_tier1(T1t, R, T7t, ctl_lines):
     old = MD.read_text() if MD.exists() else head
     if "<!-- tier1 -->" in old:
         a, rest = old.split("<!-- tier1 -->", 1)
-        old = a + block + rest.split("<!-- /tier1 -->", 1)[1].lstrip("\n")
+        tail = rest.split("<!-- /tier1 -->", 1)[1].lstrip("\n")
+        old = a + block + ("\n" + tail if tail else "")  # keep one blank line before the next block
     else:
         old = old.rstrip("\n") + "\n\n" + block
     MD.write_text(old)

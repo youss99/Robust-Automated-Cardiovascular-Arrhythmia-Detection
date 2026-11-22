@@ -296,7 +296,8 @@ def upsert(tag, block):
     block = a + "\n" + block.rstrip("\n") + "\n" + b + "\n"
     if a in md:
         x, rest = md.split(a, 1)
-        md = x + block + rest.split(b, 1)[1].lstrip("\n")
+        tail = rest.split(b, 1)[1].lstrip("\n")
+        md = x + block + ("\n" + tail if tail else "")  # keep one blank line before the next block
     else:
         md = md.rstrip("\n") + "\n\n" + block
     T.MD.write_text(md)
