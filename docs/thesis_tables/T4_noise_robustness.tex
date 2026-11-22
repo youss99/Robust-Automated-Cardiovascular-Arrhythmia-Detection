@@ -1,0 +1,25 @@
+% T4_noise_robustness: generated 2026-11-22 00:25:19 by Tasks/final/fin_step7_rest.py (VM). Needs \usepackage{booktabs}.
+\begin{table}[htbp]
+\centering
+\small
+\caption{ST-deviation error on the noisy signal, ungated and gated (T4).}
+\label{tab:t4_noise}
+\begin{tabular}{llrrrrrrrr}
+\toprule
+Lead & Pipeline & \multicolumn{2}{c}{Ungated} & \multicolumn{2}{c}{Ungated, bursts} & \multicolumn{2}{c}{Gated} & \multicolumn{2}{c}{Gated, bursts} \\
+ & & MAE (mV) & $n$ & MAE (mV) & $n$ & MAE (mV) & $n$ & MAE (mV) & $n$ \\
+\midrule
+II & L1 & 0.0349 $\pm$ 0.0003 & 110{,}783 & 0.0729 $\pm$ 0.0012 & 14{,}754 & 0.0288 $\pm$ 0.0004 & 86{,}707 & 0.0613 $\pm$ 0.0029 & 11 \\
+II & L2 & 0.0352 $\pm$ 0.0015 & 110{,}783 & 0.0742 $\pm$ 0.0006 & 14{,}754 & 0.0292 $\pm$ 0.0018 & 86{,}707 & 0.0607 $\pm$ 0.0023 & 11 \\
+II & NK-PR & 0.0666 & 91{,}875 & 0.2339 & 14{,}202 & 0.0341 & 69{,}532 & 0.1238 & 8 \\
+II & NK-FP & 0.0395 & 110{,}783 & 0.2076 & 14{,}754 & 0.0125 & 86{,}707 & 0.0553 & 11 \\
+\midrule
+V2 & L1 & 0.0354 $\pm$ 0.0002 & 94{,}475 & 0.0349 $\pm$ 0.0007 & 12{,}586 & 0.0359 $\pm$ 0.0003 & 72{,}704 & 0.0417 $\pm$ 0.0014 & 1{,}801 \\
+V2 & L2 & 0.0304 $\pm$ 0.0009 & 94{,}475 & 0.0391 $\pm$ 0.0012 & 12{,}586 & 0.0303 $\pm$ 0.0010 & 72{,}704 & 0.0571 $\pm$ 0.0021 & 1{,}801 \\
+V2 & NK-PR & 0.0462 & 73{,}823 & 0.0564 & 12{,}147 & 0.0439 & 53{,}999 & 0.0701 & 1{,}620 \\
+V2 & NK-FP & 0.0140 & 94{,}475 & 0.0333 & 12{,}586 & 0.0110 & 72{,}704 & 0.0297 & 1{,}801 \\
+\bottomrule
+\end{tabular}
+
+\par\smallskip\footnotesize NSTDB em noise, seed 42; noisy estimates against clean labels on 10\,s windows; masked pairs excluded. Gated: windows kept by the 6\,dB SQI gate (rodrigues2021 R-peaks), the same windows for every pipeline. Bursts: windows entirely inside a noise burst. $n$: windows with a value. L1, L2: mean $\pm$ SD over three training seeds ($n$: mean).
+\end{table}

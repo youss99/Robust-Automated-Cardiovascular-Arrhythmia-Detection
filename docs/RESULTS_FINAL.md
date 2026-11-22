@@ -275,3 +275,22 @@ Generated 2026-11-22 00:24:59 by `Tasks/final/fin_step7_rest.py` (VM). Set A win
 |  |  |  | NK-PR | 2318 | 0.1027 | -0.1017 | 0.1018 |
 |  |  |  | NK-FP | 2583 | 0.0224 | -0.0215 | 0.0217 |
 <!-- /t3 -->
+
+<!-- t4 -->
+## T4. Noise robustness (NSTDB `em`, seed 42)
+
+Generated 2026-11-22 00:25:19 by `Tasks/final/fin_step7_rest.py` (VM). Noisy estimates against the clean labels, set A windows, masked pairs excluded. Gated = windows the 6 dB SQI gate (rodrigues2021 peaks, at the learned grid anchor) keeps, the same windows for every pipeline (as T7). Bursts = windows entirely inside a burst of the seed-42 contamination log. n = windows with a value. L1, L2: mean ± SD over S1–S3.
+
+| lead | pipeline | ungated MAE (mV) | n | ungated burst MAE (mV) | n | gated MAE (mV) | n | gated burst MAE (mV) | n |
+|---|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| II | L1 | 0.0349 ± 0.0003 | 110,783 | 0.0729 ± 0.0012 | 14,754 | 0.0288 ± 0.0004 | 86,707 | 0.0613 ± 0.0029 | 11 |
+| II | L2 | 0.0352 ± 0.0015 | 110,783 | 0.0742 ± 0.0006 | 14,754 | 0.0292 ± 0.0018 | 86,707 | 0.0607 ± 0.0023 | 11 |
+| II | NK-PR | 0.0666 | 91,875 | 0.2339 | 14,202 | 0.0341 | 69,532 | 0.1238 | 8 |
+| II | NK-FP | 0.0395 | 110,783 | 0.2076 | 14,754 | 0.0125 | 86,707 | 0.0553 | 11 |
+| V2 | L1 | 0.0354 ± 0.0002 | 94,475 | 0.0349 ± 0.0007 | 12,586 | 0.0359 ± 0.0003 | 72,704 | 0.0417 ± 0.0014 | 1,801 |
+| V2 | L2 | 0.0304 ± 0.0009 | 94,475 | 0.0391 ± 0.0012 | 12,586 | 0.0303 ± 0.0010 | 72,704 | 0.0571 ± 0.0021 | 1,801 |
+| V2 | NK-PR | 0.0462 | 73,823 | 0.0564 | 12,147 | 0.0439 | 53,999 | 0.0701 | 1,620 |
+| V2 | NK-FP | 0.0140 | 94,475 | 0.0333 | 12,586 | 0.0110 | 72,704 | 0.0297 | 1,801 |
+
+Labelled windows: II 110,783 (bursts 14,754), gate keeps 86,707 (bursts 11); V2 94,475 (bursts 12,586), gate keeps 72,704 (bursts 1,801).
+<!-- /t4 -->
