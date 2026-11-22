@@ -15,7 +15,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, "/home/student/GIT/Tasks/phase1/eval")
+sys.path.insert(0, str(Path(__file__).resolve().parent / "phase1_lib"))  # vendored phase-1 code (phase1_lib/MANIFEST.tsv)
 import p1_eval as P  # noqa: E402
 
 OUT = Path("/home/student/GIT/Tasks/final/runs/7a_r1_rescore")

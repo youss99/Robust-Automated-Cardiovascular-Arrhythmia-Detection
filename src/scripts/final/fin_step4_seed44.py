@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, "/home/student/GIT/Tasks/C_neurokit")
+sys.path.insert(0, str(Path(__file__).resolve().parent / "phase1_lib"))  # vendored phase-1 code (phase1_lib/MANIFEST.tsv)
 import c21_step4_seed43 as C21  # noqa: E402
 
 C17 = C21.C17

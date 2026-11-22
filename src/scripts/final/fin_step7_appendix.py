@@ -106,7 +106,7 @@ def value(runs, key):
 def hyperparams():
     pre = {"II": parse(BB / "patch_ecg_unified_ii_lossfix/params.txt"), "V2": parse(BB / "patch_ecg_unified_v2_lossfix/params.txt")}
     diff = sorted(k for k in pre["II"] if pre["II"][k] != pre["V2"].get(k))
-    two = parse(REPO / "docs/reports/2026-11-22_narval_ii_v2_rebuilt_params.txt")
+    two = parse(T.DOCS / "reports/2026-11-22_narval_ii_v2_rebuilt_params.txt")
     diff2 = sorted(k for k in set(two) | set(pre["II"]) if two.get(k) != pre["II"].get(k))
     assert set(two) == set(pre["II"]) and diff2 == ["custom_lead_selection", "model_name", "root_path", "save_path"], diff2
     ft = {}

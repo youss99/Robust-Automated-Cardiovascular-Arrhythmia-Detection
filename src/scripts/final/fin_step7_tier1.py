@@ -27,8 +27,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, "/home/student/GIT/Tasks/phase1/eval")
-sys.path.insert(0, "/home/student/GIT/Tasks/C_neurokit")
+sys.path.insert(0, str(Path(__file__).resolve().parent / "phase1_lib"))  # vendored phase-1 code (phase1_lib/MANIFEST.tsv)
 import p1_eval as P  # noqa: E402
 import ltst_pipeline.old_fsm_gs as G  # noqa: E402
 from score_alarms import per_record_components, metrics_from_components, gs_scope  # noqa: E402
@@ -38,7 +37,8 @@ FS, WIN, THR = 250, 2500, 6.0
 S6 = Path("/home/student/GIT/Tasks/final/runs/step6")
 S5 = Path("/home/student/GIT/Tasks/final/runs/step5")
 OUT = Path("/home/student/GIT/Tasks/final/runs/step7")
-MD = P.REPO / "docs" / "RESULTS_FINAL.md"
+DOCS = Path(__file__).resolve().parents[3] / "docs"  # the docs of the repo this script lives in (data paths stay in P)
+MD = DOCS / "RESULTS_FINAL.md"
 ORACLE = P.SC / "oracle" / "oracle_grid.csv.gz"
 RECS = list(K.RECORDS_15)
 MASK = set(K.MANUAL_OMIT)
@@ -304,7 +304,7 @@ def md_tier1(T1t, R, T7t, ctl_lines):
     MD.write_text(old)
 
 
-TEX = P.REPO / "docs" / "thesis_tables"
+TEX = DOCS / "thesis_tables"
 
 
 def tpm(x, d=3):

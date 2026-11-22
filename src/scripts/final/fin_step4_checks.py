@@ -26,7 +26,7 @@ import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 import wfdb  # noqa: E402
 
-sys.path.insert(0, "/home/student/GIT/Tasks/C_neurokit")
+sys.path.insert(0, str(Path(__file__).resolve().parent / "phase1_lib"))  # vendored phase-1 code (phase1_lib/MANIFEST.tsv)
 import c21b_step4_report as R  # noqa: E402
 import neurokit2 as nk  # noqa: E402
 

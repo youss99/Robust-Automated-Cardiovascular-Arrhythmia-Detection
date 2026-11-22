@@ -54,7 +54,7 @@ def data():
         assert n_ds == len(s), (name, n_ds, len(s))
         pre.append(dict(backbone=name, leads=leads, used_by=used, rows=len(s), train=int((s.strat_fold_unannotated == 1).sum()), validation=int((s.strat_fold_unannotated == 3).sum()),
                         chapman=int((src == "chapman").sum()), cinc2020=int((src == "cinc-2020").sum()), source="pretrain_split.csv + data_source.txt (VM copy)"))
-    rep = (REPO / "docs/reports/2026-11-20_step0_0b.md").read_text()
+    rep = (T.DOCS / "reports/2026-11-20_step0_0b.md").read_text()
     m = re.search(r"\| II,V2 \| ([\d,]+) of ([\d,]+) \| ([\d,]+) \(match\) \|", rep)
     pre.append(dict(backbone="patch_ecg_unified_ii_v2_rebuilt", leads="II + V2", used_by="L2", rows=int(m.group(3).replace(",", "")), train=46274, validation=11569,
                     chapman=39415, cinc2020=18428, source="Narval read-only check 2026-11-22 (pretrain_split.csv, data_source.txt; best.pt sha256 f3554f14...)"))
@@ -204,6 +204,43 @@ REPL = [  # (file glob, old, new): exact strings
 MUST = {r[:2] for r in REPL if r[0] != "*.tex"} | {("*.tex", "clean signal"), ("*.tex", "noisy predictions against clean labels"), ("*.tex", "noisy estimates against clean labels")}
 
 
+# System names (user, 2026-11-22; DECISIONS.md 2026-11-22 terminology). Order matters: longer names first. Applied to every line except
+# comments and \label{}; idempotent (the new names contain none of the old tokens). L1-old and NK-FP-nk were not in the user's list: named
+# after the user's pattern for the published variant (NK-PR-pub -> Fiducial (published)).
+NAMES = [
+    (r"NK-PR-pub", "Fiducial (published)"),
+    (r"NK-FP-nk", "Fiducial-FP (NeuroKit peaks)"),
+    (r"NK-PR", "Fiducial-PR"),
+    (r"NK-FP", "Fiducial-FP"),
+    (r"L1-sup|L1sup", "Learned-1L (no PT)"),
+    (r"L2-sup|L2sup", "Learned-2L (no PT)"),
+    (r"L1-old", "Learned-1L (published)"),
+    (r"(?<![\w-])MON(?![\w])", "Monitor"),
+    (r"(?<![\w-])L1(?![\w-])", "Learned-1L"),
+    (r"(?<![\w-])L2(?![\w-])", "Learned-2L"),
+    (r"ST-deviation episode", "ischemic episode"),
+    (r"\\caption\{ischemic", r"\\caption{Ischemic"),
+    (r"(\\caption\{[^}]*: )ischemic", r"\1ischemic"),
+]
+OLD_NAMES = re.compile(r"NK-(PR|FP)|(?<![\w-])MON(?![\w])|(?<![\w-])L[12](?![\w])|L[12]sup|ST-deviation episode")
+
+
+def rename_systems(text):
+    out = []
+    for line in text.split("\n"):
+        if line.startswith("%"):
+            out.append(line)
+            continue
+        labels = re.findall(r"\\label\{[^}]*\}", line)
+        body = re.sub(r"\\label\{[^}]*\}", "\x00", line)
+        for old, new in NAMES:
+            body = re.sub(old, new, body)
+        for lab in labels:
+            body = body.replace("\x00", lab, 1)
+        out.append(body)
+    return "\n".join(out)
+
+
 def relabel():
     files = sorted(T.TEX.glob("*.tex"))
     hits = {}
@@ -215,18 +252,22 @@ def relabel():
             n = s.count(old)
             hits[(pat, old)] = hits.get((pat, old), 0) + n
             s = s.replace(old, new)
+        s = rename_systems(s)
         f.write_text(s)
-    left = []
+    left, left_names = [], []
     for f in files:
         for i, line in enumerate(f.read_text().splitlines(), 1):
             body = line if not line.startswith("%") else ""
             body = re.sub(r"\\label\{[^}]*\}", "", body)
             if re.search(r"(?i)\bclean\b|\bnoisy\b", body):
                 left.append(f"{f.name}:{i}")
+            if OLD_NAMES.search(body):
+                left_names.append(f"{f.name}:{i}: {OLD_NAMES.search(body).group(0)}")
     lines = [f"{'ok  ' if n else 'NONE'}  {n:3d}  {pat}: {old!r}" for (pat, old), n in hits.items()]
     already = all(("Baseline" in (T.TEX / "T5_alarms_main.tex").read_text(), "Artifact" in (T.TEX / "T5_alarms_main.tex").read_text()))
     missing = [k for k in MUST if hits.get(k, 0) == 0]
-    ok = not left and (not missing or already)
+    ok = not left and not left_names and (not missing or already)
+    lines.append(f"{'PASS' if not left_names else 'FAIL'}  no old system names / 'ST-deviation episode' left outside comments and labels: {left_names}")
     lines.append(f"{'PASS' if not left else 'FAIL'}  no 'clean' / 'noisy' left outside comments and labels: {left}")
     lines.append(f"{'PASS' if (not missing or already) else 'FAIL'}  every listed replacement applied (or already applied): missing {missing}")
     OUT.mkdir(parents=True, exist_ok=True)

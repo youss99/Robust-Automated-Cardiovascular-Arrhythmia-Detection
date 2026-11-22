@@ -1,0 +1,33 @@
+vendored_file	line	source_line	vendored_line
+p1_eval.py	32	sys.path.insert(0, "/home/student/GIT/4_ltst_beatcenter_test1/test1nk_eval_2026-10-30")	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/4_ltst_beatcenter_test1/test1nk_eval_2026-10-30")
+p1_eval.py	33	sys.path.insert(0, "/home/student/GIT/Tasks/C_neurokit")	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/Tasks/C_neurokit")
+c13_fp_gap.py	28	sys.path.insert(0, str(TASK))	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, str(TASK))
+c13_fp_gap.py	29	sys.path.insert(0, "/home/student/GIT/Neurokit2_Pipeline")	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/Neurokit2_Pipeline")
+c14_detectors_noisy.py	38	sys.path.insert(0, str(TASK))	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, str(TASK))
+c14_detectors_noisy.py	39	sys.path.insert(0, "/home/student/GIT/Neurokit2_Pipeline")	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/Neurokit2_Pipeline")
+c17_delineate.py	30	sys.path.insert(0, "/home/student/GIT/Tasks/C_neurokit")	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/Tasks/C_neurokit")
+c17_delineate.py	31	sys.path.insert(0, "/home/student/GIT/Neurokit2_Pipeline")	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/Neurokit2_Pipeline")
+c20_finalists.py	37	sys.path.insert(0, str(TASK))	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, str(TASK))
+c20_finalists.py	38	sys.path.insert(0, "/home/student/GIT/Neurokit2_Pipeline")	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/Neurokit2_Pipeline")
+c20_finalists.py	187	sys.path.insert(0, "/home/student/GIT/1_ltst_paper_cmbec48/results/alarms/_code")	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/1_ltst_paper_cmbec48/results/alarms/_code")
+c20b_paper_rule.py	26	sys.path.insert(0, str(Path(__file__).parent))	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, str(Path(__file__).parent))
+c20b_paper_rule.py	109	sys.path.insert(0, "/home/student/GIT/1_ltst_paper_cmbec48/results/alarms/_code")	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/1_ltst_paper_cmbec48/results/alarms/_code")
+c21_step4_seed43.py	23	sys.path.insert(0, str(Path(__file__).parent))	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, str(Path(__file__).parent))
+c21b_step4_report.py	27	sys.path.insert(0, str(Path(__file__).parent))	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, str(Path(__file__).parent))
+c3_score_paper.py	15	sys.path.insert(0, "/home/student/GIT/1_ltst_paper_cmbec48/results/neurokit/_code")	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/1_ltst_paper_cmbec48/results/neurokit/_code")
+c4_dmy_vs_nk.py	24	sys.path.insert(0, "/home/student/GIT/Neurokit2_Pipeline")	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/Neurokit2_Pipeline")
+c6_noisy_fold.py	28	sys.path.insert(0, "/home/student/GIT/Neurokit2_Pipeline")	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/Neurokit2_Pipeline")
+c6_noisy_fold.py	29	sys.path.insert(0, "/home/student/GIT/Tasks/C_neurokit")	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/Tasks/C_neurokit")
+evaluate_test1.py	42	sys.path.insert(0, str(NK))	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, str(NK))
+evaluate_test1.py	43	sys.path.insert(0, "/home/student/GIT/results/neurokit/_code")	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/results/neurokit/_code")
+evaluate_test1.py	44	sys.path.insert(0, "/home/student/GIT/results/alarms/_code")	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/results/alarms/_code")
+evaluate_e1.py	37	HERE = Path(__file__).resolve().parent	HERE = Path("/home/student/GIT/4_ltst_beatcenter_test1/e1_eval_2026-10-29")  # vendored: its data files stay in the original folder; was: HERE = Path(__file__).resolve().parent
+evaluate_e1.py	38	sys.path.insert(0, "/home/student/GIT/1_ltst_paper_cmbec48/results/neurokit/_code")      # nk_core (correct location)	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/1_ltst_paper_cmbec48/results/neurokit/_code")      # nk_core (correct location)
+evaluate_e1.py	39	sys.path.insert(0, "/home/student/GIT/1_ltst_paper_cmbec48/results/alarms/_code")         # score_alarms	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/1_ltst_paper_cmbec48/results/alarms/_code")         # score_alarms
+evaluate_e1.py	40	sys.path.insert(0, "/home/student/GIT/Neurokit2_Pipeline")	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/Neurokit2_Pipeline")
+evaluate_e1.py	41	sys.path.insert(1, "/home/student/GIT/4_ltst_beatcenter_test1/beatcenter_test1/_code")	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(1, "/home/student/GIT/4_ltst_beatcenter_test1/beatcenter_test1/_code")
+evaluate_t1nk.py	28	HERE = Path(__file__).resolve().parent	HERE = Path("/home/student/GIT/4_ltst_beatcenter_test1/test1nk_eval_2026-10-30")  # vendored: its data files stay in the original folder; was: HERE = Path(__file__).resolve().parent
+evaluate_t1nk.py	29	sys.path.insert(0, "/home/student/GIT/4_ltst_beatcenter_test1/e1_eval_2026-10-29")	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/4_ltst_beatcenter_test1/e1_eval_2026-10-29")
+score_alarms.py	34	sys.path.insert(0, "/home/student/GIT/results/neurokit/_code")	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/results/neurokit/_code")
+sweeps_all.py	35	sys.path.insert(0, "/home/student/GIT/results/neurokit/_code")	pass  # vendored (phase1_lib is on sys.path); was: sys.path.insert(0, "/home/student/GIT/results/neurokit/_code")
+ltst_pipeline/ml_inference.py	29	_DEFAULT_PATCHECG_ROOT = "/home/student/GIT/Robust-Automated-Cardiovascular-Arrhythmia-Detection"	_DEFAULT_PATCHECG_ROOT = str(Path(__file__).resolve().parents[5])  # vendored: the repo this copy lives in; was: "/home/student/GIT/Robust-Automated-Cardiovascular-Arrhythmia-Detection"

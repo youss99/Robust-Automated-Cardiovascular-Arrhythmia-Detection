@@ -31,8 +31,7 @@ os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 
-sys.path.insert(0, "/home/student/GIT/Tasks/phase1/eval")
-sys.path.insert(0, "/home/student/GIT/Tasks/C_neurokit")
+sys.path.insert(0, str(Path(__file__).resolve().parent / "phase1_lib"))  # vendored phase-1 code (phase1_lib/MANIFEST.tsv)
 import p1_eval as P  # noqa: E402
 import c6_noisy_fold as C6  # noqa: E402  (local NSTDB em)
 import c13_fp_gap as C13  # noqa: E402

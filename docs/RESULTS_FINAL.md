@@ -2,6 +2,8 @@
 
 Frozen setup: `docs/instructions_final_results.md` and `docs/DECISIONS.md`. Provenance: `Tasks/final/runs/step6/provenance.csv` (VM). Run log: `docs/reports/2026-11-21_vm_steps4_7.md`.
 
+**Naming (DECISIONS.md 2026-11-22):** the thesis tables and figures use Monitor (MON here), Fiducial-PR (NK-PR), Fiducial-FP (NK-FP), Fiducial (published) (NK-PR-pub), Fiducial-FP (NeuroKit peaks) (NK-FP-nk), Learned-1L / Learned-2L (L1 / L2), Learned-1L / Learned-2L (no PT) (L1-sup / L2-sup), Learned-1L (published) (L1-old), "ischemic episodes" for "ST-deviation episodes", and baseline / artifact for clean / noisy; this file keeps the run names shown in brackets.
+
 <!-- tier1 -->
 ## Tier 1 (T1, T5, T7)
 

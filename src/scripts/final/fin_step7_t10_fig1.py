@@ -30,10 +30,11 @@ import fin_step7_tier1 as T  # noqa: E402  (patches the SQI call exactly as tier
 P, K = T.P, T.K
 OUT = Path("/home/student/GIT/Tasks/final/runs/step7_t10")
 TIER1 = T.OUT
-FIG = P.REPO / "docs" / "thesis_figures"
+FIG = T.DOCS / "thesis_figures"
 LEADS, MASK, WIN = T.LEADS, T.MASK, T.WIN
 SWEEP = list(range(-20, 26))
 COLORS = {"L1": "#2a78d6", "L2": "#eb6834", "NK-FP": "#1baf7a"}  # dataviz default categorical slots 1-3, fixed order
+DISPLAY = {"L1": "Learned-1L", "L2": "Learned-2L", "NK-FP": "Fiducial-FP"}  # figure labels (DECISIONS.md 2026-11-22 terminology)
 MARK = {"L1": ("o", "-"), "L2": ("s", "--"), "NK-FP": ("^", ":")}
 PHASE1 = {("M1", "clean"): (67, 32, 34, 13), ("M1", "noisy"): (67, 43, 34, 15), ("M1", "gated_atr"): (64, 27, 37, 7),
           ("M2R", "clean"): (86, 23, 15, 11), ("M2R", "noisy"): (85, 94, 16, 42)}  # runs/_scores/main_noisy{,_atr}/alarms.csv, FULL
@@ -249,7 +250,7 @@ def fig1():
             a.text(0.03, 0.97, f"bias {s.bias:+.3f} mV\nLoA [{s.loa_lo:+.3f}, {s.loa_hi:+.3f}]\nslope {s.slope_diff_on_mean:+.2f}   n = {int(s.n)}",
                    transform=a.transAxes, va="top", ha="left", fontsize=6.5, color=ink)
             if i == 0:
-                a.set_title(f"{pipe}" + (" (S1)" if pipe != "NK-FP" else ""), fontsize=8.5, color=ink)
+                a.set_title(DISPLAY[pipe] + (" (S1)" if pipe != "NK-FP" else ""), fontsize=8.5, color=ink)
             if j == 0:
                 a.set_ylabel(f"Lead {L}\nestimate − expert (mV)")
             if i == 1:
@@ -276,7 +277,7 @@ def fig_sweep(S):
         for pipe in ("L1", "L2", "NK-FP"):
             q = S[S.pipeline == pipe].sort_values("threshold_db")
             mk, ls = MARK[pipe]
-            a.plot(q.threshold_db, q[col], color=COLORS[pipe], lw=1.5, ls=ls, marker=mk, ms=2.5, label=pipe + (" (S1)" if pipe != "NK-FP" else ""))
+            a.plot(q.threshold_db, q[col], color=COLORS[pipe], lw=1.5, ls=ls, marker=mk, ms=2.5, label=DISPLAY[pipe] + (" (S1)" if pipe != "NK-FP" else ""))
         a.axvline(6, color=ink, lw=0.6, ls="--")
         a.set_xlabel("SQI threshold (dB)")
         a.set_title(lab, fontsize=8.5, color=ink)
@@ -466,5 +467,12 @@ def main():
     return True
 
 
+def figures():
+    """Redraw both figures from the saved outputs (no alarms are rerun)."""
+    fig1()
+    fig_sweep(pd.read_csv(OUT / "T10_A4b_sweep.csv"))
+    return True
+
+
 if __name__ == "__main__":
-    sys.exit(0 if main() else 1)
+    sys.exit(0 if (figures() if sys.argv[1:] == ["figures"] else main()) else 1)

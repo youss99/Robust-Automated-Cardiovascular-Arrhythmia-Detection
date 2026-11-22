@@ -8,17 +8,17 @@
 \toprule
 Lead & Pipeline & Coverage (\%) & MAE (mV) & Bias (mV) & RMSE (mV) & Slope & $r$ & p100 (\%) & $R^2$ \\
 \midrule
-II & L1 & 100.0 $\pm$ 0.0 & 0.0303 $\pm$ 0.0008 & 0.0030 $\pm$ 0.0017 & 0.0464 $\pm$ 0.0014 & 0.704 $\pm$ 0.016 & 0.915 $\pm$ 0.006 & 4.4 $\pm$ 0.4 & 0.814 $\pm$ 0.011 \\
-II & L2 & 100.0 $\pm$ 0.0 & 0.0311 $\pm$ 0.0020 & 0.0020 $\pm$ 0.0019 & 0.0483 $\pm$ 0.0015 & 0.664 $\pm$ 0.009 & 0.914 $\pm$ 0.008 & 4.5 $\pm$ 0.3 & 0.799 $\pm$ 0.012 \\
-II & NK-PR & 83.5 & 0.0384 & $-$0.0347 & 0.0702 & 0.939 & 0.851 & 8.9 & 0.550 \\
-II & NK-FP & 100.0 & 0.0134 & $-$0.0041 & 0.0187 & 0.959 & 0.986 & 0.0 & 0.970 \\
+II & Learned-1L & 100.0 $\pm$ 0.0 & 0.0303 $\pm$ 0.0008 & 0.0030 $\pm$ 0.0017 & 0.0464 $\pm$ 0.0014 & 0.704 $\pm$ 0.016 & 0.915 $\pm$ 0.006 & 4.4 $\pm$ 0.4 & 0.814 $\pm$ 0.011 \\
+II & Learned-2L & 100.0 $\pm$ 0.0 & 0.0311 $\pm$ 0.0020 & 0.0020 $\pm$ 0.0019 & 0.0483 $\pm$ 0.0015 & 0.664 $\pm$ 0.009 & 0.914 $\pm$ 0.008 & 4.5 $\pm$ 0.3 & 0.799 $\pm$ 0.012 \\
+II & Fiducial-PR & 83.5 & 0.0384 & $-$0.0347 & 0.0702 & 0.939 & 0.851 & 8.9 & 0.550 \\
+II & Fiducial-FP & 100.0 & 0.0134 & $-$0.0041 & 0.0187 & 0.959 & 0.986 & 0.0 & 0.970 \\
 \midrule
-V2 & L1 & 100.0 $\pm$ 0.0 & 0.0322 $\pm$ 0.0003 & 0.0101 $\pm$ 0.0005 & 0.0410 $\pm$ 0.0002 & 0.445 $\pm$ 0.008 & 0.578 $\pm$ 0.005 & 1.8 $\pm$ 0.3 & 0.252 $\pm$ 0.009 \\
-V2 & L2 & 100.0 $\pm$ 0.0 & 0.0283 $\pm$ 0.0010 & 0.0037 $\pm$ 0.0004 & 0.0360 $\pm$ 0.0011 & 0.430 $\pm$ 0.030 & 0.656 $\pm$ 0.028 & 1.0 $\pm$ 0.5 & 0.424 $\pm$ 0.036 \\
-V2 & NK-PR & 75.2 & 0.0450 & $-$0.0419 & 0.0582 & 0.732 & 0.675 & 8.7 & $-$0.483 \\
-V2 & NK-FP & 100.0 & 0.0115 & $-$0.0040 & 0.0178 & 1.052 & 0.946 & 0.1 & 0.859 \\
+V2 & Learned-1L & 100.0 $\pm$ 0.0 & 0.0322 $\pm$ 0.0003 & 0.0101 $\pm$ 0.0005 & 0.0410 $\pm$ 0.0002 & 0.445 $\pm$ 0.008 & 0.578 $\pm$ 0.005 & 1.8 $\pm$ 0.3 & 0.252 $\pm$ 0.009 \\
+V2 & Learned-2L & 100.0 $\pm$ 0.0 & 0.0283 $\pm$ 0.0010 & 0.0037 $\pm$ 0.0004 & 0.0360 $\pm$ 0.0011 & 0.430 $\pm$ 0.030 & 0.656 $\pm$ 0.028 & 1.0 $\pm$ 0.5 & 0.424 $\pm$ 0.036 \\
+V2 & Fiducial-PR & 75.2 & 0.0450 & $-$0.0419 & 0.0582 & 0.732 & 0.675 & 8.7 & $-$0.483 \\
+V2 & Fiducial-FP & 100.0 & 0.0115 & $-$0.0040 & 0.0178 & 1.052 & 0.946 & 0.1 & 0.859 \\
 \bottomrule
 \end{tabular}
 
-\par\smallskip\footnotesize Label: expert ST deviation of each DMY beat; estimate: the 10\,s window containing the beat. Masked record--lead pairs excluded; 15 records. Slope: OLS of estimate on label. p100: share with $|$error$|$ > 0.1\,mV. L1, L2: mean $\pm$ SD over three training seeds.
+\par\smallskip\footnotesize Label: expert ST deviation of each DMY beat; estimate: the 10\,s window containing the beat. Masked record--lead pairs excluded; 15 records. Slope: OLS of estimate on label. p100: share with $|$error$|$ > 0.1\,mV. Learned-1L, Learned-2L: mean $\pm$ SD over three training seeds.
 \end{table}

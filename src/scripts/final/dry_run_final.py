@@ -31,7 +31,7 @@ import pandas as pd
 
 REPO = Path("/home/student/GIT/Robust-Automated-Cardiovascular-Arrhythmia-Detection")
 sys.path.insert(0, str(REPO))
-sys.path.insert(0, "/home/student/GIT/Neurokit2_Pipeline")
+sys.path.insert(0, str(Path(__file__).resolve().parent / "phase1_lib"))  # vendored phase-1 code (phase1_lib/MANIFEST.tsv)
 from src.core.datasets.ecg_interface import ClassificationType  # noqa: E402
 from src.core.utils.data_utils import get_dls  # noqa: E402
 from ltst_pipeline.old_fsm_gs import MANUAL_OMIT  # noqa: E402  (the published scorer's mask list)
