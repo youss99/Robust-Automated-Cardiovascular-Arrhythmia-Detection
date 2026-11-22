@@ -1,4 +1,4 @@
-% T0_pretraining_data: generated 2026-11-22 01:21:44 by Tasks/final/fin_step7_data_ceiling.py (VM). Needs \usepackage{booktabs}.
+% T0_pretraining_data: generated 2026-11-22 01:32:48 by Tasks/final/fin_step7_data_ceiling.py (VM). Needs \usepackage{booktabs}.
 \begin{table}[htbp]
 \centering
 \small
@@ -10,9 +10,9 @@ Leads & Used by & Windows & Train & Validation \\
 \midrule
 II & L1 lead II model & 58{,}942 & 47{,}154 & 11{,}788 \\
 V2 & L1 lead V2 model & 57{,}843 & 46{,}274 & 11{,}569 \\
-II + V2 & L2 & 57{,}843 & -- & -- \\
+II + V2 & L2 & 57{,}843 & 46{,}274 & 11{,}569 \\
 \bottomrule
 \end{tabular}
 
-\par\smallskip\footnotesize Unified v2: 58{,}942 10\,s windows at 100\,Hz from Chapman and CinC 2020; windows with a blank selected lead removed. The two-lead backbone's train/validation split was not copied from the cluster (--).
+\par\smallskip\footnotesize Unified v2: 58{,}942 10\,s windows at 100\,Hz from Chapman and CinC 2020; windows with a blank selected lead removed. The II + V2 backbone uses the same windows as the V2 backbone with its own random 80/20 train/validation draw.
 \end{table}

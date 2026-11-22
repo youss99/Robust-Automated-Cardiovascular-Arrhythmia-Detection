@@ -311,7 +311,7 @@ Generated 2026-11-22 00:26:08 by `Tasks/final/fin_step7_rest.py` (VM). NSTDB `em
 <!-- data -->
 ## Data
 
-Generated 2026-11-22 01:21:44 by `Tasks/final/fin_step7_data_ceiling.py` (VM). Pre-training: Unified v2 (`Unified_Dataset_No_PTB_Segment_v2`, 58,942 10 s windows at 100 Hz from Chapman and CinC 2020, md5 `ac56fd0e…`); rows where a selected lead is blank are removed. Fine-tuning: the fold dataset CSVs (`phase1_folds/`), one split for every learned model; a window is a 10 s segment of the median LTST signal with both targets (every row has both). Masked record–lead pairs are in the training rows (their targets are present) and are excluded from scoring; gold-standard episodes: 69 lead II + 32 lead V2 = 101, none on a masked pair.
+Generated 2026-11-22 01:32:48 by `Tasks/final/fin_step7_data_ceiling.py` (VM). Pre-training: Unified v2 (`Unified_Dataset_No_PTB_Segment_v2`, 58,942 10 s windows at 100 Hz from Chapman and CinC 2020, md5 `ac56fd0e…`); rows where a selected lead is blank are removed. Fine-tuning: the fold dataset CSVs (`phase1_folds/`), one split for every learned model; a window is a 10 s segment of the median LTST signal with both targets (every row has both). Masked record–lead pairs are in the training rows (their targets are present) and are excluded from scoring; gold-standard episodes: 69 lead II + 32 lead V2 = 101, none on a masked pair.
 
 ### Pre-training set
 
@@ -319,9 +319,9 @@ Generated 2026-11-22 01:21:44 by `Tasks/final/fin_step7_data_ceiling.py` (VM). P
 |---|---|---|--:|--:|--:|--:|--:|
 | `patch_ecg_unified_ii_lossfix` | II | L1 lead II model | 58,942 | 47,154 | 11,788 | 40,507 | 18,435 |
 | `patch_ecg_unified_v2_lossfix` | V2 | L1 lead V2 model | 57,843 | 46,274 | 11,569 | 39,415 | 18,428 |
-| `patch_ecg_unified_ii_v2_rebuilt` | II + V2 | L2 | 57,843 | – | – | – | – |
+| `patch_ecg_unified_ii_v2_rebuilt` | II + V2 | L2 | 57,843 | 46,274 | 11,569 | 39,415 | 18,428 |
 
-The two-lead backbone's row count is from the cluster report (its `data_source.txt` on Narval, 57,843 = the rows with V2 not blank); its train / validation split file was not copied to the VM.
+The two-lead backbone's counts are from a read-only check on Narval (2026-11-22: its `pretrain_split.csv` and `data_source.txt`, `_best.pt` sha256 `f3554f14…`; the same check reproduced the two single-lead rows above). It holds the same 57,843 windows as the V2 backbone (lead II is never blank, so the II + V2 filter equals the V2 filter), with its own random 80/20 train / validation draw: the totals per split and per source are equal, the assignment differs (39,179 of 57,843 windows, 68 %, share a split; Narval's count).
 
 ### Fine-tuning folds
 
@@ -349,7 +349,6 @@ The two-lead backbone's row count is from the cluster report (its `data_source.t
 Checks: test records over the 5 folds = the 15 scored records, each once: yes; fold 1: episodes over splits = 69 II / 32 V2: yes; fold 1: 16 records over splits: yes; fold 2: episodes over splits = 69 II / 32 V2: yes; fold 2: 16 records over splits: yes; fold 3: episodes over splits = 69 II / 32 V2: yes; fold 3: 16 records over splits: yes; fold 4: episodes over splits = 69 II / 32 V2: yes; fold 4: 16 records over splits: yes; fold 5: episodes over splits = 69 II / 32 V2: yes; fold 5: 16 records over splits: yes; pre-training total rows in the cluster report = 58,942 (Unified v2): yes.
 Note: the CSVs hold the windows the trainer used (step 6 reproduced every saved test MSE on them); the prediction grid of the trainer's H5 has 263 more 10 s segments over the 15 records (119,126 vs 118,863), which have no CSV row. The scored set A grid (T1) is a separate 10 s grid from sample 0.
 <!-- /data -->
-
 <!-- ceiling -->
 ## Gold-standard ceiling (baseline)
 
