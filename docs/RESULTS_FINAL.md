@@ -294,3 +294,16 @@ Generated 2026-11-22 00:25:19 by `Tasks/final/fin_step7_rest.py` (VM). Noisy est
 
 Labelled windows: II 110,783 (bursts 14,754), gate keeps 86,707 (bursts 11); V2 94,475 (bursts 12,586), gate keeps 72,704 (bursts 1,801).
 <!-- /t4 -->
+
+<!-- t6 -->
+## T6. Alarm robustness across noise seeds (gated)
+
+Generated 2026-11-22 00:26:08 by `Tasks/final/fin_step7_rest.py` (VM). NSTDB `em` seeds 42, 43, 44, each with its own noisy signal, predictions, NeuroKit values and SQI gate (rodrigues2021 peaks, 6 dB). Union, FULL scope. Mean ± SD (ddof 1) over the three noise seeds; L1, L2: training seed S1. Check: seed 42 equals the tier-1 gated rows (4 / 4).
+
+| pipeline | TP | FP | FN | F1 | false-alarm h | per seed 42 / 43 / 44: TP / FP / FN |
+|---|--:|--:|--:|--:|--:|---|
+| L1 (S1) | 75.7 ± 2.1 | 29.0 ± 3.0 | 25.3 ± 2.1 | 0.736 ± 0.018 | 78.4 ± 3.3 | 78/29/23; 74/32/27; 75/26/26 |
+| L2 (S1) | 75.3 ± 0.6 | 20.7 ± 1.2 | 25.7 ± 0.6 | 0.765 ± 0.007 | 70.1 ± 1.9 | 75/22/26; 76/20/25; 75/20/26 |
+| NK-PR | 68.3 ± 2.1 | 21.0 ± 0.0 | 32.7 ± 2.1 | 0.718 ± 0.014 | 33.5 ± 1.7 | 66/21/35; 69/21/32; 70/21/31 |
+| NK-FP | 84.0 ± 1.0 | 7.0 ± 1.0 | 17.0 ± 1.0 | 0.875 ± 0.005 | 21.6 ± 3.0 | 84/6/17; 85/8/16; 83/7/18 |
+<!-- /t6 -->
