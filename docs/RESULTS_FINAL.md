@@ -78,6 +78,25 @@ Record-clustered paired bootstrap, 5,000 resamples (seed 20260805); training see
 | L2 - L2sup | dMAE V2 (mV) | 0.0303 | 0.0357 | -0.0054 * | [-0.0101, -0.0009] |
 <!-- /tier1 -->
 
+<!-- t5_temporal -->
+### T5 note: temporal metrics, L1 vs L2 (written by hand, 2026-11-22)
+
+From the T5 rows above (mean ± SD over S1–S3). Temporal metrics: IoU, duration Se, duration +P, false-alarm hours.
+
+| condition | IoU L1 / L2 | duration Se L1 / L2 | duration +P L1 / L2 | false-alarm h L1 / L2 |
+|---|---|---|---|---|
+| clean | 0.552 ± 0.030 / 0.546 ± 0.033 | 0.738 ± 0.022 / 0.694 ± 0.034 | 0.687 ± 0.028 / 0.720 ± 0.051 | 65.6 ± 6.6 / 53.3 ± 13.8 |
+| noisy | 0.491 ± 0.021 / 0.402 ± 0.027 | 0.614 ± 0.021 / 0.454 ± 0.022 | 0.709 ± 0.019 / 0.780 ± 0.074 | 49.1 ± 3.5 / 25.6 ± 11.4 |
+| gated | 0.528 ± 0.025 / 0.503 ± 0.019 | 0.724 ± 0.020 / 0.670 ± 0.016 | 0.660 ± 0.023 / 0.668 ± 0.022 | 72.9 ± 5.5 / 65.1 ± 5.6 |
+
+- L1 covers more of each true episode in time: higher duration Se in every condition, and higher IoU (tie on clean).
+- L2's alarms are more conservative: fewer false-alarm hours in every condition and higher duration +P (about equal when gated).
+  T6 agrees across noise seeds 42–44, gated: false-alarm hours L1 (S1) 78.4 ± 3.3, L2 (S1) 70.1 ± 1.9.
+- No significance test was run on any temporal metric (T7 covers F1, FP and MAE only). Gated, the IoU gap (0.025) is about one seed SD,
+  so L1's temporal advantage is not established there; the noisy-condition gaps are several SDs. On episode F1, L2 is ahead (gated 0.770 vs 0.752,
+  95 % CI of the difference includes 0, T7).
+<!-- /t5_temporal -->
+
 <!-- t10 -->
 ## T10. Ablations A1–A4
 
@@ -364,3 +383,27 @@ Generated 2026-11-22 01:22:12 by `Tasks/final/fin_step7_data_ceiling.py` (VM). T
 
 With the true labels as input, the 1 missed episode and 9 false alarms reflect differences between the FSM on 10 s window medians and the way the gold-standard episodes were built; their cause was not examined.
 <!-- /ceiling -->
+
+<!-- ceiling_inputs -->
+### Ceiling note: how each system feeds the FSM (written by hand, 2026-11-22)
+
+Checked in the code (`Tasks/final/fin_step5_nk.py`, `Tasks/C_neurokit/c13_fp_gap.segments`, `c20b_paper_rule.paper_beats`,
+`ltst_pipeline/old_fsm_gs.run_fsm_on_record`). Every final system feeds the FSM **one value per 10 s window, never per beat**, on the same grid
+(windows [2500k, 2500k + 2500)), so the ceiling applies to all four.
+
+| | Fiducial-PR (NK-PR) | Fiducial-FP (NK-FP) | L1, L2 | Ceiling (gold-standard labels) |
+|---|---|---|---|---|
+| per-beat value | median of 3 samples (baseline) / 5 (artifact) at J+60 minus the median of the PR segment (P offset to R onset); rodrigues2021 delineation | 5-sample mean at R + b + 60 ms minus the 5-sample mean at R − a; rodrigues2021 R-peaks | – (one prediction per window) | `.16a` `ee` of each annotated beat |
+| beat → window | J+60 sample | ST point (R + b + 60 ms) | – | J+60 sample |
+| window value | median | median | model output | median (rounded to 4 decimals) |
+| minimum beats | ≥ 5 usable beats (finite ST and baseline), else no value | ≥ 5 usable beats, else no value | – | ≥ 1 beat, else no value |
+| FSM anchor | 2500k + 2500 | 2500k + 2500 | 2500k + 2499 | 2500k + 2499 |
+
+- A window with no value is skipped by the FSM: its state is frozen and the skipped time does not count toward warm-up durations (the same for
+  gated windows). The ceiling's label is the learned models' training target (phase 1's oracle control).
+- What Ch4 should state for the two fiducial systems: (1) they need ≥ 5 usable detected beats per window, the ceiling ≥ 1 annotated beat; on the
+  baseline signal, Fiducial-PR has a value on 80.7 % (II) / 75.0 % (V2) of labelled windows, Fiducial-FP on 100 % (T1); (2) they use detected beats
+  (rodrigues2021), not annotated ones, and Fiducial-FP places beats by its ST point, not J+60; (3) their anchor is one sample (4 ms) later, which does
+  not change the window a beat belongs to.
+- Not measured: how much the ≥ 5-beat rule alone would change the ceiling (it would need a ceiling run with ≥ 5 annotated beats per window).
+<!-- /ceiling_inputs -->
