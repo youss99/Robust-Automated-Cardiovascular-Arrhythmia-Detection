@@ -307,3 +307,61 @@ Generated 2026-11-22 00:26:08 by `Tasks/final/fin_step7_rest.py` (VM). NSTDB `em
 | NK-PR | 68.3 ± 2.1 | 21.0 ± 0.0 | 32.7 ± 2.1 | 0.718 ± 0.014 | 33.5 ± 1.7 | 66/21/35; 69/21/32; 70/21/31 |
 | NK-FP | 84.0 ± 1.0 | 7.0 ± 1.0 | 17.0 ± 1.0 | 0.875 ± 0.005 | 21.6 ± 3.0 | 84/6/17; 85/8/16; 83/7/18 |
 <!-- /t6 -->
+
+<!-- data -->
+## Data
+
+Generated 2026-11-22 01:21:44 by `Tasks/final/fin_step7_data_ceiling.py` (VM). Pre-training: Unified v2 (`Unified_Dataset_No_PTB_Segment_v2`, 58,942 10 s windows at 100 Hz from Chapman and CinC 2020, md5 `ac56fd0e…`); rows where a selected lead is blank are removed. Fine-tuning: the fold dataset CSVs (`phase1_folds/`), one split for every learned model; a window is a 10 s segment of the median LTST signal with both targets (every row has both). Masked record–lead pairs are in the training rows (their targets are present) and are excluded from scoring; gold-standard episodes: 69 lead II + 32 lead V2 = 101, none on a masked pair.
+
+### Pre-training set
+
+| backbone | leads | used by | rows | train | validation | Chapman | CinC 2020 |
+|---|---|---|--:|--:|--:|--:|--:|
+| `patch_ecg_unified_ii_lossfix` | II | L1 lead II model | 58,942 | 47,154 | 11,788 | 40,507 | 18,435 |
+| `patch_ecg_unified_v2_lossfix` | V2 | L1 lead V2 model | 57,843 | 46,274 | 11,569 | 39,415 | 18,428 |
+| `patch_ecg_unified_ii_v2_rebuilt` | II + V2 | L2 | 57,843 | – | – | – | – |
+
+The two-lead backbone's row count is from the cluster report (its `data_source.txt` on Narval, 57,843 = the rows with V2 not blank); its train / validation split file was not copied to the VM.
+
+### Fine-tuning folds
+
+| fold | dataset | split | records | windows | II windows (no masked) | V2 windows (no masked) | II episodes | V2 episodes | record IDs (masked: II / V2) |
+|--:|---|---|--:|--:|--:|--:|--:|--:|---|
+| 1 | `cv5_optB_leadV2_opt2p_fold01` | train | 10 | 78,797 | 63,201 | 62,892 | 42 | 20 | s20011 s20061 s20071 s20091 s20111 s20121 s20131 s20141 s20201 s20241 (masked: s20091 s20121 / s20121 s20241) |
+| 1 | `cv5_optB_leadV2_opt2p_fold01` | validation | 2 | 15,609 | 15,609 | 15,609 | 12 | 4 | s20101 s20231 |
+| 1 | `cv5_optB_leadV2_opt2p_fold01` | test | 3 | 23,754 | 23,754 | 15,959 | 10 | 8 | s20051 s20211 s20221 (masked: – / s20221) |
+| 1 | `cv5_optB_leadV2_opt2p_fold01` | unused | 1 | 8,204 | 8,204 | 0 | 5 | 0 | s20081 (masked: – / s20081) |
+| 2 | `cv5_optB_fold02` | train | 11 | 86,485 | 70,889 | 62,785 | 47 | 23 | s20051 s20061 s20071 s20091 s20111 s20121 s20131 s20201 s20211 s20221 s20241 (masked: s20091 s20121 / s20121 s20221 s20241) |
+| 2 | `cv5_optB_fold02` | validation | 2 | 16,636 | 16,636 | 16,636 | 6 | 6 | s20011 s20231 |
+| 2 | `cv5_optB_fold02` | test | 3 | 23,243 | 23,243 | 15,039 | 16 | 3 | s20081 s20101 s20141 (masked: – / s20081) |
+| 3 | `cv5_optB_fold03` | train | 11 | 85,631 | 78,130 | 62,131 | 56 | 24 | s20051 s20071 s20081 s20101 s20111 s20121 s20131 s20201 s20211 s20221 s20231 (masked: s20121 / s20081 s20121 s20221) |
+| 3 | `cv5_optB_fold03` | validation | 2 | 16,066 | 16,066 | 16,066 | 5 | 5 | s20011 s20141 |
+| 3 | `cv5_optB_fold03` | test | 3 | 24,667 | 16,572 | 16,263 | 8 | 3 | s20061 s20091 s20241 (masked: s20091 / s20241) |
+| 4 | `cv5_optB_leadV2_opt2p_fold04` | train | 10 | 78,565 | 62,969 | 54,865 | 40 | 18 | s20011 s20051 s20091 s20101 s20121 s20141 s20201 s20211 s20221 s20241 (masked: s20091 s20121 / s20121 s20221 s20241) |
+| 4 | `cv5_optB_leadV2_opt2p_fold04` | validation | 2 | 15,751 | 15,751 | 15,751 | 7 | 5 | s20061 s20071 |
+| 4 | `cv5_optB_leadV2_opt2p_fold04` | test | 3 | 23,844 | 23,844 | 23,844 | 17 | 9 | s20111 s20131 s20231 |
+| 4 | `cv5_optB_leadV2_opt2p_fold04` | unused | 1 | 8,204 | 8,204 | 0 | 5 | 0 | s20081 (masked: – / s20081) |
+| 5 | `cv5_optB_leadV2_opt2p_fold05` | train | 10 | 79,310 | 63,714 | 55,810 | 40 | 20 | s20051 s20061 s20081 s20091 s20101 s20111 s20121 s20211 s20221 s20231 (masked: s20091 s20121 / s20081 s20121 s20221) |
+| 5 | `cv5_optB_leadV2_opt2p_fold05` | validation | 2 | 15,295 | 15,295 | 15,295 | 9 | 3 | s20131 s20141 |
+| 5 | `cv5_optB_leadV2_opt2p_fold05` | test | 3 | 23,355 | 23,355 | 23,355 | 18 | 9 | s20011 s20071 s20201 |
+| 5 | `cv5_optB_leadV2_opt2p_fold05` | unused | 1 | 8,404 | 8,404 | 0 | 2 | 0 | s20241 (masked: – / s20241) |
+
+Checks: test records over the 5 folds = the 15 scored records, each once: yes; fold 1: episodes over splits = 69 II / 32 V2: yes; fold 1: 16 records over splits: yes; fold 2: episodes over splits = 69 II / 32 V2: yes; fold 2: 16 records over splits: yes; fold 3: episodes over splits = 69 II / 32 V2: yes; fold 3: 16 records over splits: yes; fold 4: episodes over splits = 69 II / 32 V2: yes; fold 4: 16 records over splits: yes; fold 5: episodes over splits = 69 II / 32 V2: yes; fold 5: 16 records over splits: yes; pre-training total rows in the cluster report = 58,942 (Unified v2): yes.
+Note: the CSVs hold the windows the trainer used (step 6 reproduced every saved test MSE on them); the prediction grid of the trainer's H5 has 263 more 10 s segments over the 15 records (119,126 vs 118,863), which have no CSV row. The scored set A grid (T1) is a separate 10 s grid from sample 0.
+<!-- /data -->
+
+<!-- ceiling -->
+## Gold-standard ceiling (baseline)
+
+Generated 2026-11-22 01:22:12 by `Tasks/final/fin_step7_data_ceiling.py` (VM). The true window labels (set A: median `.16a` `ee` of each 10 s grid window, anchors 2500k + 2499) through the same FSM and scorer as T5, baseline condition (no noise, no gate), masked pairs excluded, union of II and V2. It is the score of a perfect window-level estimator under this FSM. Control: equals phase 1's oracle union (yes).
+
+| pipeline | TP | FP | FN | precision | recall | F1 | IoU | false-alarm h | duration Se | duration +P | redundant |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| gold-standard labels | 100 | 9 | 1 | 0.917 | 0.990 | 0.952 | 0.920 | 16.3 | 0.997 | 0.923 | 3 |
+| NK-PR (T5) | 71.0 | 26.0 | 30.0 | 0.732 | 0.703 | 0.717 | 0.445 | 34.3 | 0.524 | 0.749 | 10.0 |
+| NK-FP (T5) | 87.0 | 10.0 | 14.0 | 0.897 | 0.861 | 0.879 | 0.849 | 15.3 | 0.916 | 0.921 | 11.0 |
+| L1 (T5) | 74.7 ± 0.6 | 37.7 ± 3.2 | 26.3 ± 0.6 | 0.665 ± 0.018 | 0.739 ± 0.006 | 0.700 ± 0.007 | 0.552 ± 0.030 | 65.6 ± 6.6 | 0.738 ± 0.022 | 0.687 ± 0.028 | 18.0 ± 2.6 |
+| L2 (T5) | 77.3 ± 1.5 | 29.7 ± 2.3 | 23.7 ± 1.5 | 0.723 ± 0.016 | 0.766 ± 0.015 | 0.744 ± 0.011 | 0.546 ± 0.033 | 53.3 ± 13.8 | 0.694 ± 0.034 | 0.720 ± 0.051 | 20.3 ± 0.6 |
+
+With the true labels as input, the 1 missed episode and 9 false alarms reflect differences between the FSM on 10 s window medians and the way the gold-standard episodes were built; their cause was not examined.
+<!-- /ceiling -->

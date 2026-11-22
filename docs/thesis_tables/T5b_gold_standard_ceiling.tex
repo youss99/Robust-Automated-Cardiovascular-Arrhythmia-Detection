@@ -1,0 +1,21 @@
+% T5b_gold_standard_ceiling: generated 2026-11-22 01:22:12 by Tasks/final/fin_step7_data_ceiling.py (VM). Needs \usepackage{booktabs}.
+\begin{table}[htbp]
+\centering
+\small
+\caption{Alarm ceiling: gold-standard window labels through the alarm FSM, baseline condition.}
+\label{tab:t5b_ceiling}
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+Estimate & TP & FP & FN & Precision & Recall & F1 & IoU & FA (h) & Dur.\ Se & Dur.\ +P & Redundant \\
+\midrule
+Gold-standard labels & 100 & 9 & 1 & 0.917 & 0.990 & 0.952 & 0.920 & 16.3 & 0.997 & 0.923 & 3 \\
+\midrule
+NK-PR & 71.0 & 26.0 & 30.0 & 0.732 & 0.703 & 0.717 & 0.445 & 34.3 & 0.524 & 0.749 & 10.0 \\
+NK-FP & 87.0 & 10.0 & 14.0 & 0.897 & 0.861 & 0.879 & 0.849 & 15.3 & 0.916 & 0.921 & 11.0 \\
+L1 & 74.7 $\pm$ 0.6 & 37.7 $\pm$ 3.2 & 26.3 $\pm$ 0.6 & 0.665 $\pm$ 0.018 & 0.739 $\pm$ 0.006 & 0.700 $\pm$ 0.007 & 0.552 $\pm$ 0.030 & 65.6 $\pm$ 6.6 & 0.738 $\pm$ 0.022 & 0.687 $\pm$ 0.028 & 18.0 $\pm$ 2.6 \\
+L2 & 77.3 $\pm$ 1.5 & 29.7 $\pm$ 2.3 & 23.7 $\pm$ 1.5 & 0.723 $\pm$ 0.016 & 0.766 $\pm$ 0.015 & 0.744 $\pm$ 0.011 & 0.546 $\pm$ 0.033 & 53.3 $\pm$ 13.8 & 0.694 $\pm$ 0.034 & 0.720 $\pm$ 0.051 & 20.3 $\pm$ 0.6 \\
+\bottomrule
+\end{tabular}
+
+\par\smallskip\footnotesize Gold-standard labels: median expert ST deviation of each 10\,s window, through the same PROSE FSM and scorer; baseline condition, no gate; union of lead II and V2 alarms, 101 episodes, 15 records, masked pairs excluded. Pipeline rows repeated from Table T5 (baseline). L1, L2: mean $\pm$ SD over three training seeds.
+\end{table}

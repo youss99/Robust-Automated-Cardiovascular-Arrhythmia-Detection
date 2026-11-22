@@ -1,0 +1,37 @@
+% T0_fold_data: generated 2026-11-22 01:21:44 by Tasks/final/fin_step7_data_ceiling.py (VM). Needs \usepackage{booktabs}.
+\begin{table}[htbp]
+\centering
+\small
+\caption{Fine-tuning and evaluation data per fold (LTST, 16 records).}
+\label{tab:t0_folds}
+\begin{tabular}{llrrrrrr}
+\toprule
+Fold & Split & Records & Windows & II w/o masked & V2 w/o masked & II episodes & V2 episodes \\
+\midrule
+1 & Train & 10 & 78{,}797 & 63{,}201 & 62{,}892 & 42 & 20 \\
+ & Validation & 2 & 15{,}609 & 15{,}609 & 15{,}609 & 12 & 4 \\
+ & Test & 3 & 23{,}754 & 23{,}754 & 15{,}959 & 10 & 8 \\
+ & Unused & 1 & 8{,}204 & 8{,}204 & 0 & 5 & 0 \\
+\midrule
+2 & Train & 11 & 86{,}485 & 70{,}889 & 62{,}785 & 47 & 23 \\
+ & Validation & 2 & 16{,}636 & 16{,}636 & 16{,}636 & 6 & 6 \\
+ & Test & 3 & 23{,}243 & 23{,}243 & 15{,}039 & 16 & 3 \\
+\midrule
+3 & Train & 11 & 85{,}631 & 78{,}130 & 62{,}131 & 56 & 24 \\
+ & Validation & 2 & 16{,}066 & 16{,}066 & 16{,}066 & 5 & 5 \\
+ & Test & 3 & 24{,}667 & 16{,}572 & 16{,}263 & 8 & 3 \\
+\midrule
+4 & Train & 10 & 78{,}565 & 62{,}969 & 54{,}865 & 40 & 18 \\
+ & Validation & 2 & 15{,}751 & 15{,}751 & 15{,}751 & 7 & 5 \\
+ & Test & 3 & 23{,}844 & 23{,}844 & 23{,}844 & 17 & 9 \\
+ & Unused & 1 & 8{,}204 & 8{,}204 & 0 & 5 & 0 \\
+\midrule
+5 & Train & 10 & 79{,}310 & 63{,}714 & 55{,}810 & 40 & 20 \\
+ & Validation & 2 & 15{,}295 & 15{,}295 & 15{,}295 & 9 & 3 \\
+ & Test & 3 & 23{,}355 & 23{,}355 & 23{,}355 & 18 & 9 \\
+ & Unused & 1 & 8{,}404 & 8{,}404 & 0 & 2 & 0 \\
+\bottomrule
+\end{tabular}
+
+\par\smallskip\footnotesize Windows: 10\,s segments with both targets (the rows the trainer used); masked record--lead pairs stay in training and are excluded from scoring (columns w/o masked). Episodes: gold-standard ST episodes per lead (69 II + 32 V2), none on a masked pair. Record IDs (LTST s-numbers): fold 1: validation 20101 20231, test 20051 20211 20221, unused 20081; fold 2: validation 20011 20231, test 20081 20101 20141; fold 3: validation 20011 20141, test 20061 20091 20241; fold 4: validation 20061 20071, test 20111 20131 20231, unused 20081; fold 5: validation 20131 20141, test 20011 20071 20201, unused 20241.
+\end{table}
