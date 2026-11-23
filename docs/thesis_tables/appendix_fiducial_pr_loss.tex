@@ -1,0 +1,31 @@
+% appendix_fiducial_pr_loss: generated 2026-11-22 19:40:03 by src/scripts/final/fin_step7_appendix.py (VM). Needs \usepackage{booktabs}.
+\begin{table}[htbp]
+\centering
+\small
+\caption{Fiducial-PR: beats and 10\,s windows lost at each step (rodrigues2021 R-peaks, NeuroKit DWT delineation).}
+\label{tab:appendix_fiducial_pr_loss}
+\begin{tabular}{lrrrr}
+\toprule
+& \multicolumn{2}{c}{Lead II} & \multicolumn{2}{c}{Lead V2} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+ & Baseline & Artifact & Baseline & Artifact \\
+\midrule
+\multicolumn{5}{l}{\textit{Beats (detected R-peaks)}} \\
+R-peaks detected & 1{,}418{,}847 & 1{,}431{,}407 & 1{,}208{,}569 & 1{,}214{,}789 \\
+No J+60 (R offset not found) & 102{,}043 (7.2) & 101{,}319 (7.1) & 10{,}847 (0.9) & 10{,}604 (0.9) \\
+P offset not found & 97 (0.0) & 994 (0.1) & 426 (0.0) & 374 (0.0) \\
+R onset not found & 8{,}057 (0.6) & 15{,}394 (1.1) & 85{,}245 (7.1) & 80{,}431 (6.6) \\
+P offset not before R onset & 266{,}527 (18.8) & 267{,}434 (18.7) & 300{,}315 (24.8) & 281{,}969 (23.2) \\
+\textbf{Usable} & 1{,}042{,}123 (73.4) & 1{,}046{,}266 (73.1) & 811{,}736 (67.2) & 841{,}411 (69.3) \\
+Median PR-segment length, usable beats (ms) & 54 & 54 & 44 & 44 \\
+\midrule
+\multicolumn{5}{l}{\textit{10\,s windows}} \\
+Windows & 111{,}142 & 111{,}142 & 94{,}816 & 94{,}816 \\
+\textbf{With a value} ($\geq$\,5 usable beats) & 89{,}708 (80.7) & 92{,}218 (83.0) & 71{,}169 (75.1) & 74{,}116 (78.2) \\
+1--4 usable beats (no value) & 11{,}109 (10.0) & 9{,}931 (8.9) & 13{,}751 (14.5) & 12{,}187 (12.9) \\
+No usable beat & 10{,}325 (9.3) & 8{,}993 (8.1) & 9{,}896 (10.4) & 8{,}513 (9.0) \\
+\bottomrule
+\end{tabular}
+
+\par\smallskip\footnotesize Counts with percentages in brackets (beats: of detected R-peaks; windows: of all 10\,s windows). No beat failed only on R onset $\geq$ R (other order checks: 0). 15 records, masked record--lead pairs excluded; artifact: NSTDB em, seed 42. Each beat is counted once, at the first test it fails, in the order listed. A usable beat has J+60 after R, and a P offset before the R onset before R; its ST deviation is the median at J+60 minus the median of the PR segment. A window has a value when at least 5 usable beats have their J+60 inside it. Lowest share of windows with a value, baseline: s20201 V2 22\,\%; s20111 II 22\,\%; s20131 V2 35\,\%.
+\end{table}

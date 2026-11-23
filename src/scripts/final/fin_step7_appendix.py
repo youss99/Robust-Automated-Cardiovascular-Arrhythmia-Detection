@@ -13,7 +13,8 @@ per_record   docs/thesis_tables/appendix_per_record.tex: per record and lead, ga
              Checks: the same alarm files scored in the FULL scope reproduce tier 1's per-record components; TP + FN = the lead's GS
              episodes in every row; MAE pooled over records equals T7's A / B values.
 Output: Tasks/final/runs/step7_appendix/ (CSV, CHECKS.txt) and the two .tex files.
-Usage: <repo .venv>/bin/python -u -W ignore fin_step7_appendix.py hyperparams|per_record"""
+pr_loss      docs/thesis_tables/appendix_fiducial_pr_loss.tex: Fiducial-PR beat and window loss (see pr_loss()).
+Usage: <repo .venv>/bin/python -u -W ignore fin_step7_appendix.py hyperparams|per_record|pr_loss"""
 import ast
 import re
 import sys
@@ -273,8 +274,92 @@ def per_record():
     return ok
 
 
+# ------------------------------------------------------------------ pr_loss
+def pr_loss():
+    """Fiducial-PR (NK-PR) beat and window loss, from the stored rodrigues2021 delineations (baseline and artifact seed 42), 15 records,
+    masked pairs out. Beat tests as c20b_paper_rule.paper_beats (lines 39 and 42): J+60 found and after R; P offset and R onset found,
+    P offset >= 0, P offset < R onset < R. Windows as c13_fp_gap.segments: beat -> 10 s window by its J+60 sample, value when >= 5 usable beats.
+    Controls: windows with a value equal step 5's coverage.csv (NKPR, every condition and lead); on s20011 (both leads, baseline) the usable
+    test equals the beats where paper_beats on the real signal gives a finite ST and baseline."""
+    import c13_fp_gap as C13
+    import c20_finalists as B
+    import c20b_paper_rule as PR
+    import wfdb
+    cov = pd.read_csv(T.S5 / "coverage.csv").query("pipeline == 'NKPR'")
+    rows, lines, ok = [], [], True
+    for cond, tag in (("clean", "raw"), ("noisy42", "noise")):
+        for rec in T.RECS:
+            for lead, L in ((0, "II"), (1, "V2")):
+                if (rec, L) in T.MASK:
+                    continue
+                w = pd.read_csv(B.DEL / f"delin_{tag}_nofilter_rodrigues2021" / f"lead_{lead}" / f"waves_{rec}_lead{lead}.csv",
+                                usecols=["r_peak", "ECG_P_Offsets", "ECG_R_Onsets", "J_plus_60ms"])
+                rp, po, ro, j = (w[c].to_numpy(float) for c in ["r_peak", "ECG_P_Offsets", "ECG_R_Onsets", "J_plus_60ms"])
+                j_ok = ~np.isnan(j) & (rp < j)
+                no_po, no_ro = j_ok & np.isnan(po), j_ok & ~np.isnan(po) & np.isnan(ro)
+                pres = j_ok & ~np.isnan(po) & ~np.isnan(ro)
+                order_bad = pres & ~((po >= 0) & (po < ro) & (ro < rp))
+                use = pres & ~order_bad
+                if cond == "clean" and rec == "s20011":
+                    x = wfdb.rdrecord(str(T.T1.RECORDS_DIR / rec / rec)).p_signal[:, lead]
+                    d = pd.read_csv(B.DEL / f"delin_raw_nofilter_rodrigues2021/lead_{lead}/waves_{rec}_lead{lead}.csv")
+                    st, iso = PR.paper_beats(x, d, 1)
+                    same = np.array_equal(np.isfinite(st) & np.isfinite(iso), use)
+                    ok &= same
+                    lines.append(f"{'PASS' if same else 'FAIL'}  s20011 {L} baseline: usable test equals paper_beats on the signal ({int(use.sum())} beats)")
+                start, _ = C13.grid(rec, lead)
+                idx = np.searchsorted(start, j[use].astype(np.int64), side="right") - 1
+                cnt = np.bincount(idx[idx >= 0], minlength=len(start))[:len(start)]
+                med_pr = float(np.median((ro - po)[use]) * 4) if use.any() else np.nan
+                rows.append(dict(condition=cond, record=rec, lead=L, r_peaks=len(w), no_J60=int((~j_ok).sum()), no_P_offset=int(no_po.sum()), no_R_onset=int(no_ro.sum()),
+                                 P_offset_not_before_R_onset=int((order_bad & (po >= ro)).sum()), other_order=int((order_bad & (po < ro)).sum()), usable=int(use.sum()),
+                                 median_PR_ms=med_pr, windows=len(start), windows_value=int((cnt >= 5).sum()), windows_1_4=int(((cnt > 0) & (cnt < 5)).sum()),
+                                 windows_0=int((cnt == 0).sum())))
+    R = pd.DataFrame(rows)
+    OUT.mkdir(parents=True, exist_ok=True)
+    R.to_csv(OUT / "fiducial_pr_loss_per_record.csv", index=False)
+    G = R.groupby(["condition", "lead"]).sum(numeric_only=True)
+    for (c, L), g in G.iterrows():
+        ref = cov[(cov.condition == c) & (cov.lead == L)].iloc[0]
+        same = int(g.windows_value) == int(ref.with_value) and int(g.windows) == int(ref.windows)
+        ok &= same
+        lines.append(f"{'PASS' if same else 'FAIL'}  {c} {L}: windows with a value {int(g.windows_value)} of {int(g.windows)} equal step 5 coverage {int(ref.with_value)} of {int(ref.windows)}")
+        parts = int(g.no_J60 + g.no_P_offset + g.no_R_onset + g.P_offset_not_before_R_onset + g.other_order + g.usable)
+        same = parts == int(g.r_peaks)
+        ok &= same
+        lines.append(f"{'PASS' if same else 'FAIL'}  {c} {L}: beat categories add up to the R-peaks ({parts} vs {int(g.r_peaks)})")
+    (OUT / "PR_LOSS_CHECKS.txt").write_text("\n".join(lines) + "\n")
+    print("\n".join(lines))
+    worst = R[R.condition == "clean"].assign(pct=lambda d: 100 * d.windows_value / d.windows).sort_values("pct").head(3)
+    cols = [("clean", "II"), ("noisy42", "II"), ("clean", "V2"), ("noisy42", "V2")]
+
+    def cell(c, L, num, den="r_peaks"):
+        g = G.loc[(c, L)]
+        return f"{int(g[num]):,} ({100 * g[num] / g[den]:.1f})".replace(",", "{,}")
+    body = ["\\multicolumn{5}{l}{\\textit{Beats (detected R-peaks)}}",
+            "R-peaks detected & " + " & ".join(f"{int(G.loc[k].r_peaks):,}".replace(",", "{,}") for k in cols)]
+    for lab, key in (("No J+60 (R offset not found)", "no_J60"), ("P offset not found", "no_P_offset"), ("R onset not found", "no_R_onset"),
+                     ("P offset not before R onset", "P_offset_not_before_R_onset"), ("\\textbf{Usable}", "usable")):
+        body.append(f"{lab} & " + " & ".join(cell(c, L, key) for c, L in cols))
+    body.append("Median PR-segment length, usable beats (ms) & " + " & ".join(f"{R[(R.condition == c) & (R.lead == L)].median_PR_ms.median():.0f}" for c, L in cols))
+    body += ["MIDRULE", "\\multicolumn{5}{l}{\\textit{10\\,s windows}}",
+             "Windows & " + " & ".join(f"{int(G.loc[k].windows):,}".replace(",", "{,}") for k in cols)]
+    for lab, key in (("\\textbf{With a value} ($\\geq$\\,5 usable beats)", "windows_value"), ("1--4 usable beats (no value)", "windows_1_4"), ("No usable beat", "windows_0")):
+        body.append(f"{lab} & " + " & ".join(cell(c, L, key, "windows") for c, L in cols))
+    tex_write("appendix_fiducial_pr_loss", "Fiducial-PR: beats and 10\\,s windows lost at each step (rodrigues2021 R-peaks, NeuroKit DWT delineation).",
+              "tab:appendix_fiducial_pr_loss", "lrrrr",
+              "& \\multicolumn{2}{c}{Lead II} & \\multicolumn{2}{c}{Lead V2} \\\\\n\\cmidrule(lr){2-3}\\cmidrule(lr){4-5}\n & Baseline & Artifact & Baseline & Artifact",
+              body,
+              "Counts with percentages in brackets (beats: of detected R-peaks; windows: of all 10\\,s windows). No beat failed only on R onset $\\geq$ R (other order checks: 0). 15 records, masked record--lead pairs excluded; "
+              "artifact: NSTDB em, seed 42. Each beat is counted once, at the first test it fails, in the order listed. A usable beat has J+60 after R, "
+              "and a P offset before the R onset before R; its ST deviation is the median at J+60 minus the median of the PR segment. A window has a value "
+              "when at least 5 usable beats have their J+60 inside it. Lowest share of windows with a value, baseline: "
+              + "; ".join(f"{r.record} {r.lead} {r.pct:.0f}\\,\\%" for r in worst.itertuples()) + ".", size="\\small")
+    return ok
+
+
 if __name__ == "__main__":
     st = sys.argv[1]
-    ok = {"hyperparams": hyperparams, "per_record": per_record}[st]()
+    ok = {"hyperparams": hyperparams, "per_record": per_record, "pr_loss": pr_loss}[st]()
     (OUT / (f"DONE_{st}" if ok else f"FAILED_{st}")).write_text(time.strftime("%F %T") + "\n")
     sys.exit(0 if ok else 1)
