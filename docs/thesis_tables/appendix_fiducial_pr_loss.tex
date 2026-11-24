@@ -2,7 +2,7 @@
 \begin{table}[htbp]
 \centering
 \small
-\caption{Fiducial-PR: beats and 10\,s windows lost at each step (rodrigues2021 R-peaks, NeuroKit DWT delineation).}
+\caption{Fiducial: beats and 10\,s windows lost at each step (rodrigues2021 R-peaks, NeuroKit DWT delineation).}
 \label{tab:appendix_fiducial_pr_loss}
 \begin{tabular}{lrrrr}
 \toprule
@@ -27,5 +27,5 @@ No usable beat & 10{,}325 (9.3) & 8{,}993 (8.1) & 9{,}896 (10.4) & 8{,}513 (9.0)
 \bottomrule
 \end{tabular}
 
-\par\smallskip\footnotesize Counts with percentages in brackets (beats: of detected R-peaks; windows: of all 10\,s windows). No beat failed only on R onset $\geq$ R (other order checks: 0). 15 records, masked record--lead pairs excluded; artifact: NSTDB em, seed 42. Each beat is counted once, at the first test it fails, in the order listed. A usable beat has J+60 after R, and a P offset before the R onset before R; its ST deviation is the median at J+60 minus the median of the PR segment. A window has a value when at least 5 usable beats have their J+60 inside it. Lowest share of windows with a value, baseline: s20201 V2 22\,\%; s20111 II 22\,\%; s20131 V2 35\,\%.
+\par\smallskip\footnotesize Counts with percentages in brackets (beats: of detected R-peaks; windows: of all 10\,s windows). No beat failed only on R onset $\geq$ R (other order checks: 0). 15 records, excluded record--lead pairs not scored; artifact: NSTDB em, seed 42. Each beat is counted once, at the first test it fails, in the order listed. A usable beat has J+60 after R, and a P offset before the R onset before R; its ST deviation is the median at J+60 minus the median of the PR segment. A window has a value when at least 5 usable beats have their J+60 inside it. Lowest share of windows with a value, baseline: s20201 V2 22\,\%; s20111 II 22\,\%; s20131 V2 35\,\%.
 \end{table}

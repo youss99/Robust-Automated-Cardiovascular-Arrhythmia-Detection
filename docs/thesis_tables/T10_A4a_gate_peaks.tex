@@ -8,14 +8,14 @@
 \toprule
 Pipeline & Gate peaks & TP & FP & FN & F1 & FA (h) & II kept (\%) & II MAE (mV) & V2 kept (\%) & V2 MAE (mV) \\
 \midrule
-Learned-1L (S1) & rodrigues2021 & 78 & 29 & 23 & 0.750 & 75.4 & 78.3 & 0.0291 & 77.0 & 0.0360 \\
-Learned-1L (S1) & \texttt{.atr} & 76 & 25 & 25 & 0.752 & 80.3 & 72.5 & 0.0299 & 78.0 & 0.0360 \\
-Learned-2L (S1) & rodrigues2021 & 75 & 22 & 26 & 0.758 & 70.9 & 78.3 & 0.0311 & 77.0 & 0.0314 \\
-Learned-2L (S1) & \texttt{.atr} & 75 & 24 & 26 & 0.750 & 68.3 & 72.5 & 0.0320 & 78.0 & 0.0318 \\
+Learned-1L (pretrained, S1) & rodrigues2021 & 78 & 29 & 23 & 0.750 & 75.4 & 78.3 & 0.0291 & 77.0 & 0.0360 \\
+Learned-1L (pretrained, S1) & \texttt{.atr} & 76 & 25 & 25 & 0.752 & 80.3 & 72.5 & 0.0299 & 78.0 & 0.0360 \\
+Learned-2L (pretrained, S1) & rodrigues2021 & 75 & 22 & 26 & 0.758 & 70.9 & 78.3 & 0.0311 & 77.0 & 0.0314 \\
+Learned-2L (pretrained, S1) & \texttt{.atr} & 75 & 24 & 26 & 0.750 & 68.3 & 72.5 & 0.0320 & 78.0 & 0.0318 \\
 Fiducial-FP & rodrigues2021 & 84 & 6 & 17 & 0.880 & 24.3 & 78.3 & 0.0125 & 77.0 & 0.0110 \\
 Fiducial-FP & \texttt{.atr} & 80 & 9 & 21 & 0.842 & 21.2 & 72.5 & 0.0129 & 78.0 & 0.0103 \\
 \bottomrule
 \end{tabular}
 
-\par\smallskip\footnotesize Gated MAE: predictions in the artifact condition against baseline labels on the 10\,s windows the gate keeps; masked pairs excluded.
+\par\smallskip\footnotesize Gated MAE: predictions in the artifact condition against baseline labels on the 10\,s windows the gate keeps; excluded pairs not scored.
 \end{table}

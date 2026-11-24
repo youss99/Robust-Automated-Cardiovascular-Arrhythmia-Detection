@@ -204,16 +204,17 @@ REPL = [  # (file glob, old, new): exact strings
 MUST = {r[:2] for r in REPL if r[0] != "*.tex"} | {("*.tex", "clean signal"), ("*.tex", "noisy predictions against clean labels"), ("*.tex", "noisy estimates against clean labels")}
 
 
-# System names (user, 2026-11-22; DECISIONS.md 2026-11-22 terminology). Order matters: longer names first. Applied to every line except
-# comments and \label{}; idempotent (the new names contain none of the old tokens). L1-old and NK-FP-nk were not in the user's list: named
-# after the user's pattern for the published variant (NK-PR-pub -> Fiducial (published)).
+# System names (user, 2026-11-22; DECISIONS.md 2026-11-22 terminology; updated by the user 2026-11-24). Order matters: longer names first.
+# Applied to every line except comments and \label{}; idempotent. The first block maps run names (what the generators write); the second
+# block migrates tables written with the 2026-11-22 names (Fiducial-PR, Learned-1L, (no PT)), so tables that were not regenerated get the
+# same names. L1-old and NK-FP-nk follow the user's pattern for the published variant (NK-PR-pub -> Fiducial (published)).
 NAMES = [
     (r"NK-PR-pub", "Fiducial (published)"),
     (r"NK-FP-nk", "Fiducial-FP (NeuroKit peaks)"),
-    (r"NK-PR", "Fiducial-PR"),
+    (r"NK-PR", "Fiducial"),
     (r"NK-FP", "Fiducial-FP"),
-    (r"L1-sup|L1sup", "Learned-1L (no PT)"),
-    (r"L2-sup|L2sup", "Learned-2L (no PT)"),
+    (r"L1-sup|L1sup", "Learned-1L (supervised-only)"),
+    (r"L2-sup|L2sup", "Learned-2L (supervised-only)"),
     (r"L1-old", "Learned-1L (published)"),
     (r"(?<![\w-])MON(?![\w])", "Monitor"),
     (r"(?<![\w-])L1(?![\w-])", "Learned-1L"),
@@ -221,8 +222,24 @@ NAMES = [
     (r"ST-deviation episode", "ischemic episode"),
     (r"\\caption\{ischemic", r"\\caption{Ischemic"),
     (r"(\\caption\{[^}]*: )ischemic", r"\1ischemic"),
+    # 2026-11-24 names (user): Fiducial-PR -> Fiducial; pretrained / supervised-only on every Learned system except the published one
+    (r"Fiducial-PR", "Fiducial"),
+    (r"\(no PT\)", "(supervised-only)"),
+    (r"Learned-([12])L(?! \((?:pretrained|supervised-only|published)\b)", r"Learned-\1L (pretrained)"),
+    (r"\(pretrained\) \((S[123])\)", r"(pretrained, \1)"),
+    # 2026-11-24 terms (user): masked record-lead pairs -> excluded; pre-training data named by its sources
+    (r"([Mm])asked record--lead pairs stay in training and are excluded from scoring", lambda m: ("E" if m.group(1) == "M" else "e") + "xcluded record--lead pairs stay in training and are not scored"),
+    (r"masked \(excluded from scoring\)", "excluded (not scored)"),
+    (r"([Mm])asked record--lead pairs are excluded from all scoring", lambda m: ("E" if m.group(1) == "M" else "e") + "xcluded record--lead pairs are left out of all scoring"),
+    (r"on a masked pair", "on an excluded pair"),
+    (r"([Mm])asked (record--lead pairs|pairs)( are)? excluded(?! from)", lambda m: ("E" if m.group(1) == "M" else "e") + f"xcluded {m.group(2)}{m.group(3) or ''} not scored"),
+    (r"\bw/o masked\b", "w/o excluded"),
+    (r"\b([Mm])asked\b", lambda m: ("E" if m.group(1) == "M" else "e") + "xcluded"),
+    (r"Unified v2: (.*?) from Chapman and CinC 2020", r"Pre-training data: \1 from Chapman--Shaoxing and CinC 2020"),
+    (r"Unified v2", "Chapman--Shaoxing and CinC 2020"),
 ]
-OLD_NAMES = re.compile(r"NK-(PR|FP)|(?<![\w-])MON(?![\w])|(?<![\w-])L[12](?![\w])|L[12]sup|ST-deviation episode")
+OLD_NAMES = re.compile(r"NK-(PR|FP)|(?<![\w-])MON(?![\w])|(?<![\w-])L[12](?![\w])|L[12]sup|ST-deviation episode|Fiducial-PR|\(no PT\)|"
+                       r"Learned-[12]L(?! \((?:pretrained|supervised-only|published)\b)|\b[Mm]asked\b|Unified v2")
 
 
 def rename_systems(text):

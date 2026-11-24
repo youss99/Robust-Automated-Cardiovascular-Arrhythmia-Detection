@@ -2,17 +2,17 @@
 \begin{table}[htbp]
 \centering
 \small
-\caption{Self-supervised pre-training data (Unified v2).}
+\caption{Self-supervised pre-training data (Chapman--Shaoxing and CinC 2020).}
 \label{tab:t0_pretraining}
 \begin{tabular}{llrrr}
 \toprule
 Leads & Used by & Windows & Train & Validation \\
 \midrule
-II & Learned-1L lead II model & 58{,}942 & 47{,}154 & 11{,}788 \\
-V2 & Learned-1L lead V2 model & 57{,}843 & 46{,}274 & 11{,}569 \\
-II + V2 & Learned-2L & 57{,}843 & 46{,}274 & 11{,}569 \\
+II & Learned-1L (pretrained) lead II model & 58{,}942 & 47{,}154 & 11{,}788 \\
+V2 & Learned-1L (pretrained) lead V2 model & 57{,}843 & 46{,}274 & 11{,}569 \\
+II + V2 & Learned-2L (pretrained) & 57{,}843 & 46{,}274 & 11{,}569 \\
 \bottomrule
 \end{tabular}
 
-\par\smallskip\footnotesize Unified v2: 58{,}942 10\,s windows at 100\,Hz from Chapman and CinC 2020; windows with a blank selected lead removed. The II + V2 backbone uses the same windows as the V2 backbone with its own random 80/20 train/validation draw.
+\par\smallskip\footnotesize Pre-training data: 58{,}942 10\,s windows at 100\,Hz from Chapman--Shaoxing and CinC 2020; windows with a blank selected lead removed. The II + V2 backbone uses the same windows as the V2 backbone with its own random 80/20 train/validation draw.
 \end{table}

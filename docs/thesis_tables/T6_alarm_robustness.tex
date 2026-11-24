@@ -8,12 +8,12 @@
 \toprule
 Pipeline & TP & FP & FN & F1 & FA (h) \\
 \midrule
-Learned-1L (S1) & 75.7 $\pm$ 2.1 & 29.0 $\pm$ 3.0 & 25.3 $\pm$ 2.1 & 0.736 $\pm$ 0.018 & 78.4 $\pm$ 3.3 \\
-Learned-2L (S1) & 75.3 $\pm$ 0.6 & 20.7 $\pm$ 1.2 & 25.7 $\pm$ 0.6 & 0.765 $\pm$ 0.007 & 70.1 $\pm$ 1.9 \\
-Fiducial-PR & 68.3 $\pm$ 2.1 & 21.0 $\pm$ 0.0 & 32.7 $\pm$ 2.1 & 0.718 $\pm$ 0.014 & 33.5 $\pm$ 1.7 \\
+Learned-1L (pretrained, S1) & 75.7 $\pm$ 2.1 & 29.0 $\pm$ 3.0 & 25.3 $\pm$ 2.1 & 0.736 $\pm$ 0.018 & 78.4 $\pm$ 3.3 \\
+Learned-2L (pretrained, S1) & 75.3 $\pm$ 0.6 & 20.7 $\pm$ 1.2 & 25.7 $\pm$ 0.6 & 0.765 $\pm$ 0.007 & 70.1 $\pm$ 1.9 \\
+Fiducial & 68.3 $\pm$ 2.1 & 21.0 $\pm$ 0.0 & 32.7 $\pm$ 2.1 & 0.718 $\pm$ 0.014 & 33.5 $\pm$ 1.7 \\
 Fiducial-FP & 84.0 $\pm$ 1.0 & 7.0 $\pm$ 1.0 & 17.0 $\pm$ 1.0 & 0.875 $\pm$ 0.005 & 21.6 $\pm$ 3.0 \\
 \bottomrule
 \end{tabular}
 
-\par\smallskip\footnotesize NSTDB em noise, seeds 42, 43 and 44, each gated with its own SQI (rodrigues2021 R-peaks, 6\,dB). Union of lead II and V2 alarms, 101 episodes, 15 records. Mean $\pm$ SD over the three noise seeds; Learned-1L, Learned-2L: training seed S1. FA: false-alarm hours.
+\par\smallskip\footnotesize NSTDB em noise, seeds 42, 43 and 44, each gated with its own SQI (rodrigues2021 R-peaks, 6\,dB). Union of lead II and V2 alarms, 101 episodes, 15 records. Mean $\pm$ SD over the three noise seeds; Learned-1L (pretrained), Learned-2L (pretrained): training seed S1. FA: false-alarm hours.
 \end{table}
