@@ -27,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import fin_step7_tier1 as T  # noqa: E402
 
 OUT = Path("/home/student/GIT/Tasks/final/runs/step7_step3e")
-STORED = Path("/home/student/GIT/Tasks/final/runs/step7")
+STORED = Path("/home/student/GIT/Tasks/final/runs/_archive_2026-11-24_supervised_20plus70/step7")  # tier 1 as it was when step3e was scored (L1sup / L2sup rows)
 SAVE = Path(__file__).resolve().parents[3] / "results/fine-tune/saved_models/patient-segment-regression"
 E2E = {"L1supE2E": [("lead_II", "II"), ("lead_V2", "V2")], "L2supE2E": [("two_lead", "II"), ("two_lead", "V2")]}
 OLD = ("L1", "L2", "L1sup", "L2sup")
@@ -35,6 +35,7 @@ PAIRS_CTL = [("L1", "L1sup"), ("L2", "L2sup")]
 PAIRS = [("L1supE2E", "L1sup"), ("L2supE2E", "L2sup"), ("L1", "L1supE2E"), ("L2", "L2supE2E"), ("L1", "L1sup"), ("L2", "L2sup")]
 T.OUT = OUT
 T.LEARNED.update(E2E)
+T.LEARNED.update({"L1sup": [("lead_II", "II"), ("lead_V2", "V2")], "L2sup": [("two_lead", "II"), ("two_lead", "V2")]})  # archived arm (DECISIONS.md 2026-11-24)
 
 
 def t7(C, Fg, pairs):

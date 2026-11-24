@@ -11,7 +11,8 @@ T1  clean, set A windows, per lead, masked pairs out: n, MAE, bias, RMSE, slope 
     mean +- SD (ddof 1) over S1-S3, plus each seed.
 T5  clean / noisy (seed 42) / gated (seed 42): TP, FP, FN, precision, recall, F1, IoU, false-alarm hours, duration Se and +P, redundant alarms
     (Ignored). Learned: mean +- SD over S1-S3. MON copied from the paper (gated TP 76, FP 54, FN 23; 99 episodes).
-T7  gated, seed 42: L2-L1, L2-NK-FP, L1-NK-FP, L2-NK-PR, L1-L1sup, L2-L2sup. Record-clustered paired bootstrap, 5,000 resamples (seed 20260805),
+T7  gated, seed 42: L2-L1, L2-NK-FP, L1-NK-FP, L2-NK-PR, L1-L1supE2E, L2-L2supE2E (supervised-only arm = the end-to-end runs, DECISIONS.md 2026-11-24;
+    the 20 + 70 runs L1sup / L2sup are archived). Record-clustered paired bootstrap, 5,000 resamples (seed 20260805),
     training seeds averaged inside each resample. dF1 and dFP (union alarms, FULL scope); dMAE per lead on set A windows the gate keeps
     (gate at the learned anchor, the same gate for both pipelines; each pipeline on its own windows with a value; masked pairs out).
 Control first (stops the run): the published R1 predictions through this file's alarm path with the step-5 .atr SQI reproduce the paper's
@@ -49,7 +50,7 @@ TAG = {"II": "ST0", "V2": "ST1"}
 NB, BSEED = 5000, 20260805
 COND = {"clean": "clean", "noisy": "noisy42", "gated": "noisy42"}
 LEARNED = {"L1": [("lead_II", "II"), ("lead_V2", "V2")], "L2": [("two_lead", "II"), ("two_lead", "V2")],
-           "L1sup": [("lead_II", "II"), ("lead_V2", "V2")], "L2sup": [("two_lead", "II"), ("two_lead", "V2")]}
+           "L1supE2E": [("lead_II", "II"), ("lead_V2", "V2")], "L2supE2E": [("two_lead", "II"), ("two_lead", "V2")]}  # supervised-only: end-to-end runs (DECISIONS.md 2026-11-24)
 NK = {"NK-PR": "NKPR", "NK-FP": "NKFP"}
 MON = {"clean": (78, 66, 21), "noisy": (77, 171, 22), "gated": (76, 54, 23)}  # PAPER_RESULTS_TWO_MODELS.md section 1 (Abdelazez 2017; 99 episodes)
 GS = K.load_gs(T1.GS_PATH)
@@ -214,7 +215,7 @@ def reg_sums(f, recs):
 
 # ------------------------------------------------------------------ T7
 def t7(C, Fg):
-    pairs = [("L2", "L1"), ("L2", "NK-FP"), ("L1", "NK-FP"), ("L2", "NK-PR"), ("L1", "L1sup"), ("L2", "L2sup")]
+    pairs = [("L2", "L1"), ("L2", "NK-FP"), ("L1", "NK-FP"), ("L2", "NK-PR"), ("L1", "L1supE2E"), ("L2", "L2supE2E")]
     idx15 = np.random.default_rng(BSEED).integers(0, len(RECS), size=(NB, len(RECS)))
     cg = C[C.condition == "gated"]
 

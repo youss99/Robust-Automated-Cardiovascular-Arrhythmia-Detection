@@ -2,7 +2,8 @@
 """Final runs, step 7 after tier 1 (DECISIONS.md 2026-11-21: then T10 and Fig. 1): ablations A1-A4 (T10) and the Bland-Altman figure (Fig. 1).
 
 Same alarm path, scorer, labels and gate tables as fin_step7_tier1.py (imported, unchanged). Noise seed 42.
-A1  L1 vs L1-sup, L2 vs L2-sup: training seeds S1-S3 (tier-1 per-seed files, no recomputation).
+A1  L1 vs L1-sup, L2 vs L2-sup: training seeds S1-S3 (tier-1 per-seed files, no recomputation). Supervised-only = the end-to-end runs
+    L1supE2E / L2supE2E (DECISIONS.md 2026-11-24).
 A2  L1 vs L1-old = the published CMBEC R1 predictions (pretrained, lead II + V2 models, union), gate from rodrigues2021 peaks.
     L1-rebuilt: not run (step 2b was not submitted).
 A3  NK-FP vs NK-FP-nk (NeuroKit's own peaks, refit on them; gate rodrigues2021); NK-PR vs NK-PR-pub (published M1 per-beat values; gate .atr).
@@ -133,7 +134,7 @@ def t10(V, Lb, M):
             reg.append(dict(ablation=abl, **r.to_dict(), source="tier 1"))
 
     # A1
-    for pipe in ("L1", "L1sup", "L2", "L2sup"):
+    for pipe in ("L1", "L1supE2E", "L2", "L2supE2E"):
         copy_tier1("A1", pipe, list(T.SEEDS))
     # A2: L1 (S1-S3, and S1 alone) vs L1-old (published R1)
     copy_tier1("A2", "L1", list(T.SEEDS))
@@ -303,9 +304,9 @@ def upsert(tag, block):
     T.MD.write_text(md)
 
 
-ORDER = [("A1", "L1"), ("A1", "L1sup"), ("A1", "L2"), ("A1", "L2sup"), ("A2", "L1"), ("A2", "L1-old"),
+ORDER = [("A1", "L1"), ("A1", "L1supE2E"), ("A1", "L2"), ("A1", "L2supE2E"), ("A2", "L1"), ("A2", "L1-old"),
          ("A3", "NK-FP"), ("A3", "NK-FP-nk"), ("A3", "NK-PR"), ("A3", "NK-PR-pub")]
-LABEL = {"L1sup": "L1-sup", "L2sup": "L2-sup"}
+LABEL = {"L1supE2E": "L1-sup", "L2supE2E": "L2-sup"}
 
 
 def seeds_of(q):

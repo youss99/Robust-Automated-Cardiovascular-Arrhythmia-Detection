@@ -1,10 +1,10 @@
-% appendix_hyperparams: generated 2026-11-22 01:48:20 by src/scripts/final/fin_step7_appendix.py (VM). Needs \usepackage{booktabs}.
+% appendix_hyperparams: generated 2026-11-24 03:29:32 by src/scripts/final/fin_step7_appendix.py (VM). Needs \usepackage{booktabs}.
 \begin{table}[htbp]
 \centering
 \scriptsize
-\caption{Pre-training and fine-tuning settings (from each run's \texttt{params.txt}).}
+\caption{Pre-training and fine-tuning settings.}
 \label{tab:appendix_hyperparams}
-\begin{tabular}{p{3.6cm}p{2.1cm}p{1.4cm}p{1.8cm}p{1.8cm}p{1.8cm}p{1.8cm}}
+\begin{tabular}{p{3.0cm}p{2.3cm}p{1.6cm}p{1.9cm}p{1.9cm}p{1.9cm}p{1.9cm}}
 \toprule
 Parameter & \multicolumn{2}{c}{Pre-training (Chapman--Shaoxing and CinC 2020)} & \multicolumn{4}{c}{Fine-tuning (LTST)} \\
  & Single-lead & Two-lead & Learned-1L (pretrained) & Learned-2L (pretrained) & Learned-1L (supervised-only) & Learned-2L (supervised-only) \\
@@ -16,7 +16,7 @@ Model dim.\ / feed-forward dim. & 128 / 512 & 128 / 512 & 128 / 512 & 128 / 512 
 Patch length / stride (samples) & 50 / 50 & 50 / 50 & 50 / 50 & 50 / 50 & 50 / 50 & 50 / 50 \\
 Dropout / head dropout & 0 / 0 & 0 / 0 & 0 / 0 & 0 / 0 & 0 / 0 & 0 / 0 \\
 Shared patch embedding & True & True & True & True & True & True \\
-Normalisation (RevIN mode) / scaler & BN / standard & BN / standard & BN / standard & BN / standard & BN / standard & BN / standard \\
+Input normalisation & RevIN, batch statistics & RevIN, batch statistics & RevIN, batch statistics & RevIN, batch statistics & RevIN, batch statistics & RevIN, batch statistics \\
 Head & PRETRAIN & PRETRAIN & REGRESSION / CLS\_TOKEN & REGRESSION / CLS\_TOKEN & REGRESSION / CLS\_TOKEN & REGRESSION / CLS\_TOKEN \\
 \midrule
 \multicolumn{7}{l}{\textit{Input}} \\
@@ -25,28 +25,25 @@ Context points & 5000 & 5000 & 5000 & 5000 & 5000 & 5000 \\
 \midrule
 \multicolumn{7}{l}{\textit{Objective}} \\
 Mask ratio & 0.4 & 0.4 & -- & -- & -- & -- \\
-Noise masking / zero-noise mixing & False / 0.5 & False / 0.5 & -- & -- & -- & -- \\
 Loss & -- & -- & mse & mse & mse & mse \\
 Data augmentation & none & none & none & none & none & none \\
 \midrule
-\multicolumn{7}{l}{\textit{Optimisation}} \\
-Optimiser & adamw & adamw & adamw & adamw & adamw & adamw \\
-Betas / eps & (0.9, 0.999) / 1e-08 & (0.9, 0.999) / 1e-08 & None / 1e-08 & None / 1e-08 & None / 1e-08 & None / 1e-08 \\
-Learning rate & 0.0015 & 0.0015 & 0.001 & 0.001 & 0.001 & 0.001 \\
-Layer-wise LR decay & 1 & 1 & 0.65 & 0.65 & 0.65 & 0.65 \\
-Weight decay & 0.05 & 0.05 & 0.05 & 0.05 & 0.05 & 0.05 \\
-Scheduler & True & True & False & False & False & False \\
-Warm-up epochs / warm-up LR / min.\ LR & 2 / 1e-06 / 1e-05 & 2 / 1e-06 / 1e-05 & 2 / 1e-06 / 1e-06 & 2 / 1e-06 / 1e-06 & 2 / 1e-06 / 1e-06 & 2 / 1e-06 / 1e-06 \\
+\multicolumn{7}{l}{\textit{Optimisation (as applied by the code)}} \\
+Optimiser & AdamW & AdamW & AdamW & AdamW & AdamW & AdamW \\
+Betas / eps & (0.9, 0.999) / 1e-08 & (0.9, 0.999) / 1e-08 & (0.9, 0.999) / 1e-08 & (0.9, 0.999) / 1e-08 & (0.9, 0.999) / 1e-08 & (0.9, 0.999) / 1e-08 \\
+Parameter groups & one & one & one per layer & one per layer & one & one \\
+Learning rate & OneCycle: max 0.0015, rise over 30\,\%, cosine decay & OneCycle: max 0.0015, rise over 30\,\%, cosine decay & 0.001, constant & 0.001, constant & 0.001, constant & 0.001, constant \\
+Layer-wise LR decay & none & none & 0.65 & 0.65 & none & none \\
+Weight decay & 0.05, all parameters & 0.05, all parameters & 0.05, all parameters except biases & 0.05, all parameters except biases & 0.05, all parameters & 0.05, all parameters \\
 Batch size & 128 & 128 & 128 & 128 & 128 & 128 \\
-Epochs & 500 & 500 & 20 / 70 & 20 / 70 & 20 / 70 & 20 / 70 \\
-SAM & False & False & False & False & False & False \\
-Model selection & -- & -- & valid\_loss & valid\_loss & valid\_loss & valid\_loss \\
+Epochs & 500 & 500 & 20 head-only + 70 full & 20 head-only + 70 full & 90 full (no head-only phase) & 90 full (no head-only phase) \\
+Model selection & -- & -- & lowest validation MSE, all 90 epochs & lowest validation MSE, all 90 epochs & lowest validation MSE, all 90 epochs & lowest validation MSE, all 90 epochs \\
 \midrule
 \multicolumn{7}{l}{\textit{Initialisation}} \\
 Backbone & -- & -- & ii\_lossfix, v2\_lossfix & ii\_v2\_rebuilt & none (random init.) & none (random init.) \\
-Seed & -- & -- & 200--404 (3 seeds $\times$ 5 folds) & 200--404 (3 seeds $\times$ 5 folds) & 200--404 (3 seeds $\times$ 5 folds) & 200--404 (3 seeds $\times$ 5 folds) \\
+Seed & none (one run per backbone) & none (one run) & 200--404 (3 seeds $\times$ 5 folds) & 200--404 (3 seeds $\times$ 5 folds) & 200--404 (3 seeds $\times$ 5 folds) & 200--404 (3 seeds $\times$ 5 folds) \\
 \bottomrule
 \end{tabular}
 
-\par\smallskip\footnotesize Values read from \texttt{params.txt}: the two single-lead backbones (\texttt{ii\_lossfix}, \texttt{v2\_lossfix}; identical except the lead) and all 90 fine-tuning runs; a value is shown when it is the same in every run of the column; --: not shown for that stage. Fine-tuning epochs: head only, then full network. Seeds: S1 = 200, S2 = 300, S3 = 400, plus fold $-$ 1. Two-lead backbone (\texttt{ii\_v2\_rebuilt}): \texttt{params.txt} read on the cluster; it differs from the single-lead backbones only in the leads. It was trained on 2026-11-06, before the pre-training loss fix (commit b8f688d); the fix does not change pre-training with two or more leads, and the backbone check (step 0b) passed. Windows: Table~\ref{tab:t0_pretraining}.
+\par\smallskip\footnotesize Architecture, input and objective: values from \texttt{params.txt} (the two single-lead backbones, \texttt{ii\_lossfix} and \texttt{v2\_lossfix}, identical except the lead; the two-lead backbone; all 90 fine-tuning runs), shown when the same in every run of the column; --: not applicable. Optimisation: the settings as the training code applies them, checked against \texttt{params.txt}. Betas: the AdamW defaults. Pre-training: one parameter group, weight decay on every parameter, no layer-wise decay. Pretrained fine-tuning: the encoder is frozen for the 20 head-only epochs; the best head-only checkpoint (lowest validation MSE) is reloaded before full-network training; layer-wise decay scales each layer's learning rate by 0.65 per layer below the head; no weight decay on biases. Supervised-only: random initialisation, the whole network trained from the first epoch. Selection uses validation MSE only. Seeds: S1 = 200, S2 = 300, S3 = 400, plus fold $-$ 1. Two-lead backbone (\texttt{ii\_v2\_rebuilt}): \texttt{params.txt} read on the cluster; it differs from the single-lead backbones only in the leads. It was trained on 2026-11-06, before the pre-training loss fix (commit b8f688d); the fix does not change pre-training with two or more leads, and the backbone check (step 0b) passed. Windows: Table~\ref{tab:t0_pretraining}.
 \end{table}

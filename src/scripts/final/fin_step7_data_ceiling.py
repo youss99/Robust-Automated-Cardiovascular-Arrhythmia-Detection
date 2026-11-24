@@ -213,6 +213,8 @@ NAMES = [
     (r"NK-FP-nk", "Fiducial-FP (NeuroKit peaks)"),
     (r"NK-PR", "Fiducial"),
     (r"NK-FP", "Fiducial-FP"),
+    (r"L1supE2E", "Learned-1L (supervised-only)"),  # supervised-only = end-to-end runs (DECISIONS.md 2026-11-24)
+    (r"L2supE2E", "Learned-2L (supervised-only)"),
     (r"L1-sup|L1sup", "Learned-1L (supervised-only)"),
     (r"L2-sup|L2sup", "Learned-2L (supervised-only)"),
     (r"L1-old", "Learned-1L (published)"),
@@ -239,7 +241,7 @@ NAMES = [
     (r"Unified v2", "Chapman--Shaoxing and CinC 2020"),
 ]
 OLD_NAMES = re.compile(r"NK-(PR|FP)|(?<![\w-])MON(?![\w])|(?<![\w-])L[12](?![\w])|L[12]sup|ST-deviation episode|Fiducial-PR|\(no PT\)|"
-                       r"Learned-[12]L(?! \((?:pretrained|supervised-only|published)\b)|\b[Mm]asked\b|Unified v2")
+                       r"Learned-[12]L(?! \((?:pretrained|supervised-only|published)\b)|\b[Mm]asked\b|Unified v2|end-to-end|head-first")
 
 
 def rename_systems(text):

@@ -2,7 +2,7 @@
 """Final runs, step 7 appendix tables (user, 2026-11-22). One stage per call.
 
 hyperparams  docs/thesis_tables/appendix_hyperparams.tex: pre-training and fine-tuning settings read from params.txt, one column per model type
-             (pre-training: single-lead backbones II and V2, two-lead backbone; fine-tuning: L1, L2, L1-sup, L2-sup). Every fine-tuning run's
+             (pre-training: single-lead backbones II and V2, two-lead backbone; fine-tuning: L1, L2, L1supE2E, L2supE2E). Every fine-tuning run's
              params.txt is parsed (90); a value is printed only if it is the same in every run of that type (seed: the per-type set). The two-lead
              backbone's params.txt is not on the VM: its text, copied from Narval on 2026-11-22 (read-only check), is in
              docs/reports/2026-11-22_narval_ii_v2_rebuilt_params.txt; it must differ from ii_lossfix only in the lead, run name and paths.
@@ -49,35 +49,24 @@ def parse(p):
 
 
 # ------------------------------------------------------------------ hyperparams
-ROWS = [  # (section, label, key in pre-training params, key in fine-tuning params, formatter)
-    ("Architecture", "Encoder", "model", "model", None),
-    ("Architecture", "Transformer layers / heads", ("n_layers", "n_heads"), ("n_layers", "n_heads"), None),
-    ("Architecture", "Model dim.\\ / feed-forward dim.", ("d_model", "d_ff"), ("d_model", "d_ff"), None),
-    ("Architecture", "Patch length / stride (samples)", ("patch_len", "stride"), ("patch_len", "stride"), None),
-    ("Architecture", "Dropout / head dropout", ("dropout", "head_dropout"), ("dropout", "head_dropout"), None),
-    ("Architecture", "Shared patch embedding", "shared_embedding", "shared_embedding", None),
-    ("Architecture", "Normalisation (RevIN mode) / scaler", ("revin_mode", "scaler"), ("revin_mode", "scaler"), None),
-    ("Architecture", "Head", "head_type", ("head_type", "class_token"), None),
-    ("Input", "Leads", "custom_lead_selection", "custom_lead_selection", None),
-    ("Input", "Context points", "context_points", "context_points", None),
-    ("Objective", "Mask ratio", "mask_ratio", None, None),
-    ("Objective", "Noise masking / zero-noise mixing", ("noise_masking", "zero_noise_mixing"), None, None),
-    ("Objective", "Loss", None, "regression_loss", None),
-    ("Objective", "Data augmentation", "data_augmentation", "data_augmentation", None),
-    ("Optimisation", "Optimiser", "opt", "opt", None),
-    ("Optimisation", "Betas / eps", ("opt_betas", "opt_eps"), ("opt_betas", "opt_eps"), None),
-    ("Optimisation", "Learning rate", "lr", "lr", None),
-    ("Optimisation", "Layer-wise LR decay", "layer_decay", "layer_decay", None),
-    ("Optimisation", "Weight decay", "weight_decay", "weight_decay", None),
-    ("Optimisation", "Scheduler", "scheduler", "scheduler", None),
-    ("Optimisation", "Warm-up epochs / warm-up LR / min.\\ LR", ("warmup_epochs", "warmup_lr", "min_lr"), ("warmup_epochs", "warmup_lr", "min_lr"), None),
-    ("Optimisation", "Batch size", "batch_size", "batch_size", None),
-    ("Optimisation", "Epochs", "n_epochs_pretrain", ("n_epochs_finetune_head", "n_epochs_finetune"), None),
-    ("Optimisation", "SAM", "sam", "sam", None),
-    ("Optimisation", "Model selection", None, "model_selection_metric", None),
-    ("Initialisation", "Backbone", None, "pretrained_model_path", None),
-    ("Initialisation", "Seed", None, "seed", None),
+ROWS = [  # (section, label, key in pre-training params, key in fine-tuning params): values read from params.txt, shown as read
+    ("Architecture", "Encoder", "model", "model"),
+    ("Architecture", "Transformer layers / heads", ("n_layers", "n_heads"), ("n_layers", "n_heads")),
+    ("Architecture", "Model dim.\\ / feed-forward dim.", ("d_model", "d_ff"), ("d_model", "d_ff")),
+    ("Architecture", "Patch length / stride (samples)", ("patch_len", "stride"), ("patch_len", "stride")),
+    ("Architecture", "Dropout / head dropout", ("dropout", "head_dropout"), ("dropout", "head_dropout")),
+    ("Architecture", "Shared patch embedding", "shared_embedding", "shared_embedding"),
+    ("Architecture", "Input normalisation", "revin_mode", "revin_mode"),
+    ("Architecture", "Head", "head_type", ("head_type", "class_token")),
+    ("Input", "Leads", "custom_lead_selection", "custom_lead_selection"),
+    ("Input", "Context points", "context_points", "context_points"),
+    ("Objective", "Mask ratio", "mask_ratio", None),
+    ("Objective", "Loss", None, "regression_loss"),
+    ("Objective", "Data augmentation", "data_augmentation", "data_augmentation"),
 ]
+EFFECTIVE = ["Optimiser", "Betas / eps", "Parameter groups", "Learning rate", "Layer-wise LR decay", "Weight decay", "Batch size", "Epochs",
+             "Model selection"]
+TYPES = ("L1", "L2", "L1supE2E", "L2supE2E")  # supervised-only = end-to-end runs (DECISIONS.md 2026-11-24); L1sup / L2sup archived
 
 
 def fmt(v):
@@ -104,6 +93,33 @@ def value(runs, key):
     return None
 
 
+def effective(col, runs):
+    """Optimisation rows as the code applies them (src/patchECG_pretrain.py:218-219, src/patchECG_finetune.py:304-305,
+    src/core/models/optim_factory.py, src/core/learner.py fine_tune); every value asserted against params.txt."""
+    one = (lambda k: value(runs, k))
+    assert one("opt") == "adamw" and one("opt_eps") == "1e-08" and not any(r.get("sam") for r in runs), col
+    if col.startswith("pre"):
+        assert all(r["opt_betas"] == [0.9, 0.999] for r in runs) and all(r["scheduler"] for r in runs) and all(r.get("pretrained_model_path") is None for r in runs)
+        return {"Optimiser": "AdamW", "Betas / eps": "(0.9, 0.999) / 1e-08", "Parameter groups": "one",
+                "Learning rate": f"OneCycle: max {one('lr')}, rise over 30\\,\\%, cosine decay", "Layer-wise LR decay": "none",
+                "Weight decay": f"{one('weight_decay')}, all parameters", "Batch size": one("batch_size"), "Epochs": one("n_epochs_pretrain"),
+                "Model selection": "--"}
+    assert all(r["opt_betas"] is None for r in runs) and not any(r["scheduler"] for r in runs), col   # betas None -> AdamW default (0.9, 0.999)
+    assert one("model_selection_metric") == "valid\\_loss", col
+    pre = col in ("L1", "L2")
+    assert all((r["pretrained_model_path"] is not None) == pre for r in runs), col
+    head, full = int(one("n_epochs_finetune_head")), int(one("n_epochs_finetune"))
+    assert (head, full) == ((20, 70) if pre else (0, 90)), (col, head, full)
+    return {"Optimiser": "AdamW", "Betas / eps": "(0.9, 0.999) / 1e-08",
+            "Parameter groups": "one per layer" if pre else "one",
+            "Learning rate": f"{one('lr')}, constant",
+            "Layer-wise LR decay": one("layer_decay") if pre else "none",
+            "Weight decay": f"{one('weight_decay')}, all parameters except biases" if pre else f"{one('weight_decay')}, all parameters",
+            "Batch size": one("batch_size"),
+            "Epochs": f"{head} head-only + {full} full" if pre else f"{full} full (no head-only phase)",
+            "Model selection": f"lowest validation MSE, all {head + full} epochs"}
+
+
 def hyperparams():
     pre = {"II": parse(BB / "patch_ecg_unified_ii_lossfix/params.txt"), "V2": parse(BB / "patch_ecg_unified_v2_lossfix/params.txt")}
     diff = sorted(k for k in pre["II"] if pre["II"][k] != pre["V2"].get(k))
@@ -112,46 +128,55 @@ def hyperparams():
     assert set(two) == set(pre["II"]) and diff2 == ["custom_lead_selection", "model_name", "root_path", "save_path"], diff2
     ft = {}
     for p in sorted(FT.glob("FIN_*/params.txt")):
-        typ = re.match(r"FIN_(L1sup|L2sup|L1|L2)_", p.parent.name).group(1)
-        ft.setdefault(typ, []).append(parse(p))
-    assert {t: len(v) for t, v in ft.items()} == {"L1": 30, "L2": 15, "L1sup": 30, "L2sup": 15}, {t: len(v) for t, v in ft.items()}
-    cols = ["pre_single", "pre_two", "L1", "L2", "L1sup", "L2sup"]
-    table, lines = [], [f"pre-training II vs V2 backbone params.txt differ only in: {diff}",
-                        f"PASS  two-lead backbone (Narval copy) vs ii_lossfix: same 77-key set, differ only in {diff2}"]
-    for sec, lab, kp, kf, _ in ROWS:
+        typ = re.match(r"FIN_(L1supE2E|L2supE2E|L1sup|L2sup|L1|L2)_", p.parent.name).group(1)
+        if typ in TYPES:
+            ft.setdefault(typ, []).append(parse(p))
+    assert {t: len(v) for t, v in ft.items()} == {"L1": 30, "L2": 15, "L1supE2E": 30, "L2supE2E": 15}, {t: len(v) for t, v in ft.items()}
+    lines = [f"pre-training II vs V2 backbone params.txt differ only in: {diff}",
+             f"PASS  two-lead backbone (Narval copy) vs ii_lossfix: same 77-key set, differ only in {diff2}"]
+    table = []
+    for sec, lab, kp, kf in ROWS:
         row = dict(section=sec, parameter=lab)
         if kp is None:
-            row["pre_single"] = "--"
+            row["pre_single"] = row["pre_two"] = "--"
         elif kp == "custom_lead_selection":
-            row["pre_single"] = "II or V2 (one backbone each)"
+            row["pre_single"], row["pre_two"] = "II or V2 (one backbone each)", "II, V2"
         else:
             v = value([pre["II"], pre["V2"]], kp)
-            assert v is not None, (lab, kp)
-            row["pre_single"] = v
-        row["pre_two"] = "II, V2" if kp == "custom_lead_selection" else ("--" if kp is None else value([two], kp))
-        for t in ("L1", "L2", "L1sup", "L2sup"):
+            assert v is not None and v == value([two], kp), (lab, kp)
+            row["pre_single"] = row["pre_two"] = v
+        for t in TYPES:
             runs = ft[t]
-            if kf == "seed":
-                s = sorted({r["seed"] for r in runs})
-                row[t] = f"{s[0]}--{s[-1]} (3 seeds $\\times$ 5 folds)"
-                lines.append(f"{t} seeds: {s}")
-            elif kf == "pretrained_model_path":
-                b = {Path(r["pretrained_model_path"]).parent.name if r["pretrained_model_path"] else "None" for r in runs}
-                row[t] = ", ".join(sorted(x.replace("patch_ecg_unified_", "").replace("_", "\\_") for x in b)) if b != {"None"} else "none (random init.)"
+            if kf is None:
+                row[t] = "--"
             elif kf == "custom_lead_selection":
-                row[t] = ", ".join(sorted({r["custom_lead_selection"] for r in runs})).replace(",", ", ").replace(",  ", ", ")
-                row[t] = "II or V2 (one model each)" if t in ("L1", "L1sup") else "II, V2"
+                row[t] = "II or V2 (one model each)" if t in ("L1", "L1supE2E") else "II, V2"
             else:
                 v = value(runs, kf)
                 if v is None:
                     raise SystemExit(f"{t}: {lab} not constant")
                 row[t] = v
+        if lab == "Input normalisation":
+            assert {row[c] for c in ("pre_single", "pre_two", *TYPES)} == {"BN"}, row
+            row.update({c: "RevIN, batch statistics" for c in ("pre_single", "pre_two", *TYPES)})
         table.append(row)
+    eff = {"pre_single": effective("pre_single", [pre["II"], pre["V2"]]), "pre_two": effective("pre_two", [two]), **{t: effective(t, ft[t]) for t in TYPES}}
+    for lab in EFFECTIVE:
+        table.append(dict(section="Optimisation (as applied by the code)", parameter=lab, **{c: eff[c][lab] for c in eff}))
+    init = dict(section="Initialisation", parameter="Backbone", pre_single="--", pre_two="--")
+    seed = dict(section="Initialisation", parameter="Seed", pre_single="none (one run per backbone)", pre_two="none (one run)")
+    for t in TYPES:
+        b = {Path(r["pretrained_model_path"]).parent.name if r["pretrained_model_path"] else "None" for r in ft[t]}
+        init[t] = ", ".join(sorted(x.replace("patch_ecg_unified_", "").replace("_", "\\_") for x in b)) if b != {"None"} else "none (random init.)"
+        sv = sorted({r["seed"] for r in ft[t]})
+        seed[t] = f"{sv[0]}--{sv[-1]} (3 seeds $\\times$ 5 folds)"
+        lines.append(f"{t} seeds: {sv}")
+    table += [init, seed]
     H = pd.DataFrame(table)
     OUT.mkdir(parents=True, exist_ok=True)
     H.to_csv(OUT / "appendix_hyperparams.csv", index=False)
-    ft_same = all(H.loc[i, "L1"] == H.loc[i, t] for i in H.index for t in ("L2", "L1sup", "L2sup") if H.loc[i, "parameter"] not in ("Leads", "Backbone", "Seed"))
-    lines.append(f"{'PASS' if ft_same else 'INFO'}  fine-tuning settings identical across L1, L2, L1-sup, L2-sup except leads, backbone and seed: {ft_same}")
+    lines.append("PASS  effective optimisation settings asserted against params.txt for every column (optimiser, betas, eps, scheduler, "
+                 "backbone, head/full epochs, selection metric)")
     body, sec0 = [], None
     for r in H.itertuples():
         if r.section != sec0:
@@ -159,16 +184,20 @@ def hyperparams():
                 body.append("MIDRULE")
             body.append(f"\\multicolumn{{7}}{{l}}{{\\textit{{{r.section}}}}}")
             sec0 = r.section
-        body.append(f"{r.parameter} & {r.pre_single} & {r.pre_two} & {r.L1} & {r.L2} & {r.L1sup} & {r.L2sup}")
-    tex_write("appendix_hyperparams", "Pre-training and fine-tuning settings (from each run's \\texttt{params.txt}).", "tab:appendix_hyperparams",
-              "p{3.6cm}p{2.1cm}p{1.4cm}p{1.8cm}p{1.8cm}p{1.8cm}p{1.8cm}",
-              "Parameter & \\multicolumn{2}{c}{Pre-training (Unified v2)} & \\multicolumn{4}{c}{Fine-tuning (LTST)} \\\\\n & Single-lead & Two-lead & L1 & L2 & L1-sup & L2-sup",
+        body.append(f"{r.parameter} & {r.pre_single} & {r.pre_two} & {r.L1} & {r.L2} & {r.L1supE2E} & {r.L2supE2E}")
+    tex_write("appendix_hyperparams", "Pre-training and fine-tuning settings.", "tab:appendix_hyperparams",
+              "p{3.0cm}p{2.3cm}p{1.6cm}p{1.9cm}p{1.9cm}p{1.9cm}p{1.9cm}",
+              "Parameter & \\multicolumn{2}{c}{Pre-training (Unified v2)} & \\multicolumn{4}{c}{Fine-tuning (LTST)} \\\\\n & Single-lead & Two-lead & L1 & L2 & L1supE2E & L2supE2E",
               body,
-              "Values read from \\texttt{params.txt}: the two single-lead backbones (\\texttt{ii\\_lossfix}, \\texttt{v2\\_lossfix}; identical except the lead) and all 90 "
-              "fine-tuning runs; a value is shown when it is the same in every run of the column; --: not shown for that stage. Fine-tuning epochs: head only, then full network. "
-              "Seeds: S1 = 200, S2 = 300, S3 = 400, plus fold $-$ 1. Two-lead backbone (\\texttt{ii\\_v2\\_rebuilt}): \\texttt{params.txt} read on the cluster; it differs from the single-lead backbones "
-              "only in the leads. It was trained on 2026-11-06, before the pre-training loss fix (commit b8f688d); the fix does not change "
-              "pre-training with two or more leads, and the backbone check (step 0b) passed. Windows: Table~\\ref{tab:t0_pretraining}.", size="\\scriptsize")
+              "Architecture, input and objective: values from \\texttt{params.txt} (the two single-lead backbones, \\texttt{ii\\_lossfix} and \\texttt{v2\\_lossfix}, identical except the lead; "
+              "the two-lead backbone; all 90 fine-tuning runs), shown when the same in every run of the column; --: not applicable. Optimisation: the settings as the training code "
+              "applies them, checked against \\texttt{params.txt}. Betas: the AdamW defaults. Pre-training: one parameter group, weight decay on every parameter, no layer-wise decay. "
+              "Pretrained fine-tuning: the encoder is frozen for the 20 head-only epochs; the best head-only checkpoint (lowest validation MSE) is reloaded before full-network "
+              "training; layer-wise decay scales each layer's learning rate by 0.65 per layer below the head; no weight decay on biases. Supervised-only: random initialisation, "
+              "the whole network trained from the first epoch. Selection uses validation MSE only. Seeds: S1 = 200, S2 = 300, S3 = 400, plus fold $-$ 1. "
+              "Two-lead backbone (\\texttt{ii\\_v2\\_rebuilt}): \\texttt{params.txt} read on the cluster; it differs from the single-lead backbones only in the leads. "
+              "It was trained on 2026-11-06, before the pre-training loss fix (commit b8f688d); the fix does not change pre-training with two or more leads, and the backbone "
+              "check (step 0b) passed. Windows: Table~\\ref{tab:t0_pretraining}.", size="\\scriptsize")
     (OUT / "HYPERPARAMS_CHECKS.txt").write_text("\n".join(lines) + "\n")
     print("\n".join(lines))
     return True
