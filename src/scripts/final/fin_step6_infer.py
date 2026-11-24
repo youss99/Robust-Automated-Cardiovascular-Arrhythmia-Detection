@@ -39,6 +39,13 @@ PIPES = [("L1", "lead_II"), ("L1", "lead_V2"), ("L2", "two_lead"), ("L1sup", "le
 SEEDS = ("S1", "S2", "S3")
 FOLDS = (1, 2, 3, 4, 5)
 EXTRA = {"noisy43": 43, "noisy44": 44}  # S1 of L1 and L2 only
+# FIN_STEP6_SET=step3e (2026-11-24, DECISIONS.md): only the 45 step3e runs (L1supE2E, L2supE2E), checked against the step3e copy-back list;
+# their own markers and check files (suffix _step3e), so the 90-run outputs and markers are not touched. Parts and predictions files are per run.
+STEP3E = os.environ.get("FIN_STEP6_SET") == "step3e"
+if STEP3E:
+    PIPES = [("L1supE2E", "lead_II"), ("L1supE2E", "lead_V2"), ("L2supE2E", "two_lead")]
+    SUMS = REPO / "results/SHA256SUMS_step3e_copyback.txt"
+TAG = "_step3e" if STEP3E else ""
 COND_SEED = {"clean": None, "noisy42": 42, **EXTRA}
 
 
@@ -208,8 +215,8 @@ def checks():
                                  backbone_sha256=job_field(rid, "backbone_sha256") if pipe in ("L1", "L2") else "none", slurm_job=job_field(rid, "slurm_job")))
     G = pd.DataFrame(rows)
     G["pass"] = (G.rel_diff <= 0.01) & (G.n_missing == 0) & (G.n_matched == G.n_test) & G.dataset_csv_sha_ok
-    P.write(G, OUT / "gate_trainer_mse.csv")
-    P.write(pd.DataFrame(prov), OUT / "provenance.csv")
+    P.write(G, OUT / f"gate_trainer_mse{TAG}.csv")
+    P.write(pd.DataFrame(prov), OUT / f"provenance{TAG}.csv")
     good = bool(G["pass"].all())
     ok &= good
     lines.append(f"{'PASS' if good else 'FAIL'}  G1 predictions at the trainer's test rows reproduce the saved test MSE within 1 %: {int(G['pass'].sum())}/{len(G)}, worst {G.rel_diff.max():.4%}; dataset CSV sha256 ok {int(G.dataset_csv_sha_ok.sum())}/{len(G)}")
@@ -240,27 +247,27 @@ def checks():
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    for m in ("DONE_step6", "FAILED_step6"):
+    for m in (f"DONE_step6{TAG}", f"FAILED_step6{TAG}"):
         (OUT / m).unlink(missing_ok=True)
     if not (OUT / "CONTROLS_PASSED").exists():
         ok, lines = controls()
         (OUT / "CONTROLS.txt").write_text("\n".join(lines) + "\n")
         log("controls", "PASSED" if ok else "FAILED", *lines)
         if not ok:
-            (OUT / "FAILED_step6").write_text("controls failed\n")
+            (OUT / f"FAILED_step6{TAG}").write_text("controls failed\n")
             return False
         (OUT / "CONTROLS_PASSED").write_text(time.strftime("%F %T") + "\n")
     failed = infer()
     if failed:
-        (OUT / "FAILED_step6").write_text(f"inference failed: {failed}\n")
+        (OUT / f"FAILED_step6{TAG}").write_text(f"inference failed: {failed}\n")
         return False
     assemble()
     log("assembled")
     ok, lines = checks()
     lines.append("ALL PASSED" if ok else "FAILED")
-    (OUT / "CHECKS.txt").write_text("\n".join(lines) + "\n")
+    (OUT / f"CHECKS{TAG}.txt").write_text("\n".join(lines) + "\n")
     log("checks", *lines)
-    (OUT / ("DONE_step6" if ok else "FAILED_step6")).write_text(time.strftime("%F %T") + "\n")
+    (OUT / (f"DONE_step6{TAG}" if ok else f"FAILED_step6{TAG}")).write_text(time.strftime("%F %T") + "\n")
     return ok
 
 
