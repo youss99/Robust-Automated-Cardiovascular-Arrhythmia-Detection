@@ -97,3 +97,7 @@ Where this file and DECISIONS.md differ, DECISIONS.md wins.
 - per-record CSVs (TP, FP, FN and MAE per record × lead × pipeline × seed), so every table can be recomputed
 - `provenance.csv`: run ID → config, git commit, checkpoint, checksum, seed
 - every figure with the script that made it
+
+## 6. Added 2026-11-24: step3e (end-to-end supervised baselines)
+
+One exception to the plan freeze (`docs/DECISIONS.md`, 2026-11-24): L1supE2E and L2supE2E, the supervised (no-PT) models trained end to end (0 head-only + 90 full-network epochs) instead of 20 + 70, everything else as step3/step3o. 45 jobs on Narval (`docs/README_final_narval_notes.md`, "step3e"). The VM then runs step 6 inference and scores the comparisons fixed in `DECISIONS.md` (schedule effect; pretraining effect against both supervised arms) with the existing scorer. Results go in a new `RESULTS_FINAL.md` section; existing tables are not changed.

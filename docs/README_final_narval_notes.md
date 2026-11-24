@@ -64,3 +64,16 @@ Commit only the report file, then `git pull --rebase origin update-initial-chang
 ## Copy back
 
 Same relative paths. For each fine-tune run: `*_best.pt`, `params.txt`, `_*_metrics*.csv` and `job_log.txt`. For each backbone: `*_best.pt`, `params.txt`, `job_log.txt`, `data_source.txt`, `pretrain_split.csv` and the `_training_metrics_*.csv`. Leave snapshots on the cluster.
+
+## step3e: end-to-end supervised baselines (added 2026-11-24)
+
+Decision and fixed comparisons: `docs/DECISIONS.md`, 2026-11-24. VM checks: `docs/reports/2026-11-24_step3e_verification.md`. **Submit only once `DECISIONS.md` records the user's final approval of step3e.**
+
+45 jobs, `FIN_L1supE2E_{lead_II,lead_V2}_S{1,2,3}_fold0{1..5}` and `FIN_L2supE2E_two_lead_S{1,2,3}_fold0{1..5}`. Each is its step3/step3o twin with `--n_epochs_finetune_head=0 --n_epochs_finetune=90`; same data folders (already linked for the final runs), seeds, flags, walltime and GPU.
+
+1. `git status` clean, pull, record the commit. No training code changed (only new scripts and docs).
+2. Self-test: `.venv/bin/python src/scripts/checks/check_training_paths.py` must still print 37/37.
+3. `python3 src/scripts/custom_dataset/build_e2e_sup_sbatches.py` writes `logs/sbatch_scripts/final_e2e/step3e/*.sbatch`, `jobs.csv` and `submit_e2e.sh` (the existing `logs/sbatch_scripts/final/` is not touched). With the default paths, `sha256sum logs/sbatch_scripts/final_e2e/jobs.csv` must equal the sha in the verification report (copy: `docs/reports/2026-11-24_step3e_dry_run_jobs.csv`). If it doesn't, stop and report.
+4. `bash logs/sbatch_scripts/final_e2e/submit_e2e.sh step3e` (refuses a second submission; job IDs in `submitted_step3e.tsv`).
+5. Report `docs/reports/<date>_step3e_training.md`: commit, job IDs, and one table with each run's best epoch and best validation loss (`job_log.txt`; the epoch column runs 0–89 with no restart). Flag NaN losses, failed jobs and runs far from their peers. Code freeze as before: no commits to `src/core`, `src/patchECG_*.py`, job scripts or fold manifests until every step3e job has started.
+6. Copy back as in "Copy back", with a `SHA256SUMS` file written on Narval before rsync.
