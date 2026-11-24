@@ -6,7 +6,7 @@ A1  L1 vs L1-sup, L2 vs L2-sup: training seeds S1-S3 (tier-1 per-seed files, no 
     L1supE2E / L2supE2E (DECISIONS.md 2026-11-24).
 A2  L1 vs L1-old = the published CMBEC R1 predictions (pretrained, lead II + V2 models, union), gate from rodrigues2021 peaks.
     L1-rebuilt: not run (step 2b was not submitted).
-A3  NK-FP vs NK-FP-nk (NeuroKit's own peaks, refit on them; gate rodrigues2021); NK-PR vs NK-PR-pub (published M1 per-beat values; gate .atr).
+A3  (dropped from the thesis, DECISIONS.md 2026-11-24; not computed any more) NK-FP vs NK-FP-nk (NeuroKit's own peaks, refit on them; gate rodrigues2021); NK-PR vs NK-PR-pub (published M1 per-beat values; gate .atr).
 A4  L1 (S1), L2 (S1), NK-FP: (a) .atr peaks for the gate instead of rodrigues2021, 6 dB; (b) SQI threshold sweep -20 to +25 dB, 1 dB steps,
     rodrigues2021 gate. Gated MAE = noisy predictions vs clean labels on the set A windows the gate keeps (gate at the learned grid anchor).
 T1 metrics (clean, set A, masked pairs out) and T5 metrics (union, FULL) per row.
@@ -34,8 +34,10 @@ TIER1 = T.OUT
 FIG = T.DOCS / "thesis_figures"
 LEADS, MASK, WIN = T.LEADS, T.MASK, T.WIN
 SWEEP = list(range(-20, 26))
+A4 = (("L1", "S1"), ("L2", "S1"))  # A4a/A4b: learned only (Fiducial-FP dropped; Fiducial was never scored under the .atr gate or the sweep)
+FIGP = ("L1", "L2")  # Fig. 1 and the sweep figure: learned systems only (DECISIONS.md 2026-11-24)
 COLORS = {"L1": "#2a78d6", "L2": "#eb6834", "NK-FP": "#1baf7a"}  # dataviz default categorical slots 1-3, fixed order
-DISPLAY = {"L1": "Learned-1L", "L2": "Learned-2L", "NK-FP": "Fiducial-FP"}  # figure labels (DECISIONS.md 2026-11-22 terminology)
+DISPLAY = {"L1": "Learned-1L (pretrained, S1)", "L2": "Learned-2L (pretrained, S1)"}  # figure labels (thesis names, DECISIONS.md 2026-11-24)
 MARK = {"L1": ("o", "-"), "L2": ("s", "--"), "NK-FP": ("^", ":")}
 PHASE1 = {("M1", "clean"): (67, 32, 34, 13), ("M1", "noisy"): (67, 43, 34, 15), ("M1", "gated_atr"): (64, 27, 37, 7),
           ("M2R", "clean"): (86, 23, 15, 11), ("M2R", "noisy"): (85, 94, 16, 42)}  # runs/_scores/main_noisy{,_atr}/alarms.csv, FULL
@@ -142,18 +144,10 @@ def t10(V, Lb, M):
         add_alarm("A2", "L1-old", "published", cond, T.learned_rows(r1_frames(cond), cond, M["grid_rod"] if cond == "gated" else None))
     for L in LEADS:
         reg.append(dict(ablation="A2", pipeline="L1-old", seed="published", lead=L, **t1_row(reg_frame(V, Lb, L, "clean", ("R1",)))))
-    # A3
-    copy_tier1("A3", "NK-FP", ["-"])
-    copy_tier1("A3", "NK-PR", ["-"])
-    for name, col, gk, gname in (("NK-FP-nk", "NKFPnk", "nk_rod", "rodrigues2021"), ("NK-PR-pub", "NKPRpub", "nk_atr", ".atr")):
-        for cond in ("clean", "noisy", "gated"):
-            d = V["clean"] if cond == "clean" else V["noisy42"]
-            add_alarm("A3", name, "-", cond, nk_rows(d, col, M[gk] if cond == "gated" else None), gate=gname)
-        for L in LEADS:
-            reg.append(dict(ablation="A3", pipeline=name, seed="-", lead=L, **t1_row(reg_frame(V, Lb, L, "clean", ("nk", col)))))
+    # A3 dropped from the thesis (DECISIONS.md 2026-11-24); its outputs are in runs/_archive_2026-11-24_before_cleanup/step7_t10/
     # A4a: .atr gate vs rodrigues2021 gate, gated only; gated MAE on kept windows for both gates
     gm = []
-    for pipe, seed in (("L1", "S1"), ("L2", "S1"), ("NK-FP", "-")):
+    for pipe, seed in A4:
         for _, r in R5[(R5.pipeline == pipe) & (R5.seed == seed) & (R5.condition == "gated")].iterrows():
             alarms.append(dict(ablation="A4a", **{k: r[k] for k in r.index if k not in ("pipeline", "seed", "condition")}, pipeline=pipe, seed=seed, condition="gated", gate="rodrigues2021", source="tier 1"))
         if pipe == "NK-FP":
@@ -168,7 +162,7 @@ def t10(V, Lb, M):
     sweep = []
     for thr in SWEEP:
         T.THR = float(thr)
-        for pipe, seed in (("L1", "S1"), ("L2", "S1"), ("NK-FP", "-")):
+        for pipe, seed in A4:
             rows = nk_rows(V["noisy42"], "NKFP", M["nk_rod"]) if pipe == "NK-FP" else T.learned_rows(T.learned_frames(pipe, seed, "noisy42"), "gated", M["grid_rod"])
             _, c, met = T.score(rows)
             rec = dict(threshold_db=thr, pipeline=pipe, seed=seed, **met)
@@ -187,7 +181,7 @@ def t10(V, Lb, M):
     pd.concat(comps, ignore_index=True).to_csv(OUT / "T10_alarm_components_per_record.csv", index=False)
     # consistency: 6 dB sweep point = tier-1 gated rows; A4a GM at rodrigues = tier-1 T7 values are not the same set (S1 only), so not compared
     chk = []
-    for pipe, seed in (("L1", "S1"), ("L2", "S1"), ("NK-FP", "-")):
+    for pipe, seed in A4:
         a = S[(S.threshold_db == 6) & (S.pipeline == pipe)].iloc[0]
         b = R5[(R5.pipeline == pipe) & (R5.seed == seed) & (R5.condition == "gated")].iloc[0]
         same = all(int(a[k]) == int(b[k]) for k in ("TP", "FP", "FN", "Ignored"))
@@ -205,7 +199,7 @@ def fig1():
     D["k"] = D.sample_16a // WIN
     Vc = pd.read_csv(T.S5 / "nk_values_clean.csv.gz", usecols=["record", "lead", "k", "nk_window", "NKFP"])
     vals = {}
-    for pipe in ("L1", "L2", "NK-FP"):
+    for pipe in FIGP:
         parts = []
         for L in LEADS:
             q = D[D.lead == L][["record", "lead", "sample_16a", "k", "dmy_ee_mV"]]
@@ -231,10 +225,10 @@ def fig1():
     St.to_csv(OUT / "Fig1_bland_altman_stats.csv", index=False)
     pd.concat(beats, ignore_index=True).to_csv(OUT / "Fig1_bland_altman_beats.csv.gz", index=False)
     plt.rcParams.update({"font.size": 8, "axes.spines.top": False, "axes.spines.right": False, "pdf.fonttype": 42})
-    fig, ax = plt.subplots(2, 3, figsize=(7.2, 4.8), sharex=True, sharey=True)
+    fig, ax = plt.subplots(2, len(FIGP), figsize=(5.2, 4.8), sharex=True, sharey=True)
     ink, muted = "#262624", "#8a8981"
     for i, L in enumerate(LEADS):
-        for j, pipe in enumerate(("L1", "L2", "NK-FP")):
+        for j, pipe in enumerate(FIGP):
             a = ax[i, j]
             d = vals[pipe]
             q = d[(d.lead == L) & d.y.notna() & d.p.notna()]
@@ -251,7 +245,7 @@ def fig1():
             a.text(0.03, 0.97, f"bias {s.bias:+.3f} mV\nLoA [{s.loa_lo:+.3f}, {s.loa_hi:+.3f}]\nslope {s.slope_diff_on_mean:+.2f}   n = {int(s.n)}",
                    transform=a.transAxes, va="top", ha="left", fontsize=6.5, color=ink)
             if i == 0:
-                a.set_title(DISPLAY[pipe] + (" (S1)" if pipe != "NK-FP" else ""), fontsize=8.5, color=ink)
+                a.set_title(DISPLAY[pipe], fontsize=8.5, color=ink)
             if j == 0:
                 a.set_ylabel(f"Lead {L}\nestimate − expert (mV)")
             if i == 1:
@@ -275,10 +269,10 @@ def fig_sweep(S):
     ink = "#262624"
     for k, (col, lab) in enumerate((("F1", "F1 (union)"), ("FP", "false-positive episodes"), ("kept_pct_II", "lead-II windows kept (%)"))):
         a = ax[k]
-        for pipe in ("L1", "L2", "NK-FP"):
+        for pipe in FIGP:
             q = S[S.pipeline == pipe].sort_values("threshold_db")
             mk, ls = MARK[pipe]
-            a.plot(q.threshold_db, q[col], color=COLORS[pipe], lw=1.5, ls=ls, marker=mk, ms=2.5, label=DISPLAY[pipe] + (" (S1)" if pipe != "NK-FP" else ""))
+            a.plot(q.threshold_db, q[col], color=COLORS[pipe], lw=1.5, ls=ls, marker=mk, ms=2.5, label=DISPLAY[pipe])
         a.axvline(6, color=ink, lw=0.6, ls="--")
         a.set_xlabel("SQI threshold (dB)")
         a.set_title(lab, fontsize=8.5, color=ink)
@@ -304,8 +298,7 @@ def upsert(tag, block):
     T.MD.write_text(md)
 
 
-ORDER = [("A1", "L1"), ("A1", "L1supE2E"), ("A1", "L2"), ("A1", "L2supE2E"), ("A2", "L1"), ("A2", "L1-old"),
-         ("A3", "NK-FP"), ("A3", "NK-FP-nk"), ("A3", "NK-PR"), ("A3", "NK-PR-pub")]
+ORDER = [("A1", "L1"), ("A1", "L1supE2E"), ("A1", "L2"), ("A1", "L2supE2E"), ("A2", "L1"), ("A2", "L1-old")]  # A3 dropped (DECISIONS.md 2026-11-24)
 LABEL = {"L1supE2E": "L1-sup", "L2supE2E": "L2-sup"}
 
 
@@ -316,7 +309,7 @@ def seeds_of(q):
 
 def md_t10(A, Rg, GM, S, ctl, chk):
     pm = T.pm
-    out = ["## T10. Ablations A1–A4", "",
+    out = ["## T10. Ablations A1, A2 and A4 (A3 not reported, DECISIONS.md 2026-11-24)", "",
            f"Generated {time.strftime('%F %T')} by `src/scripts/final/fin_step7_t10_fig1.py` (VM). Noise seed 42. Same alarm path, scorer, labels and gate tables as tier 1; "
            "rows marked S1–S3 are mean ± SD over the training seeds (A1, and L1 in A2), others one run. Each ablation row sits under the row it is compared with. "
            "L1-rebuilt (A2, optional) was not run: step 2b was not submitted.", "",
@@ -329,26 +322,26 @@ def md_t10(A, Rg, GM, S, ctl, chk):
             q = Rg[(Rg.ablation == abl) & (Rg.pipeline == pipe) & (Rg.lead == L)]
             out.append(f"| {abl} | {L} | {LABEL.get(pipe, pipe)} | {seeds_of(q)} | {pm(q.coverage_pct, 1)} | {pm(q.MAE, 4)} | {pm(q.bias, 4)} | {pm(q.RMSE, 4)} | {pm(q.slope)} | {pm(q.r)} | {pm(q.p100_pct, 1)} | {pm(q.R2)} |")
     out += ["", "### T10b. Alarms (T5 metrics, union, FULL)", "",
-            "Gate: rodrigues2021 peaks, 6 dB, except NK-PR-pub (`.atr`, as published) and the A4a `.atr` rows.", "",
-            "| ablation | condition | pipeline | seeds | gate | TP | FP | FN | precision | recall | F1 | IoU | false-alarm h | redundant |", "|---|---|---|---|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|"]
+            "Gate: rodrigues2021 peaks, 6 dB, except the A4a `.atr` rows. Alarms of both leads, each scored against the gold-standard episodes of its own lead; counts pooled over the 26 evaluated record–lead pairs. Precision (P) = TP/(TP+FP); recall (R) = TP/(TP+FN).", "",
+            "| ablation | condition | pipeline | seeds | gate | TP | FP | FN | precision | recall | F1 | IoU | redundant |", "|---|---|---|---|---|--:|--:|--:|--:|--:|--:|--:|--:|"]
     for abl, pipe in ORDER:
         for cond in ("clean", "noisy", "gated"):
             q = A[(A.ablation == abl) & (A.pipeline == pipe) & (A.condition == cond)]
             gate = "–" if cond != "gated" else q.gate.iloc[0]
-            out.append(f"| {abl} | {cond} | {LABEL.get(pipe, pipe)} | {seeds_of(q)} | {gate} | {pm(q.TP, 1)} | {pm(q.FP, 1)} | {pm(q.FN, 1)} | {pm(q.precision)} | {pm(q.recall)} | {pm(q.F1)} | {pm(q.IoU_whole_record)} | {pm(q.false_hours, 1)} | {pm(q.Ignored, 1)} |")
+            out.append(f"| {abl} | {cond} | {LABEL.get(pipe, pipe)} | {seeds_of(q)} | {gate} | {pm(q.TP, 1)} | {pm(q.FP, 1)} | {pm(q.FN, 1)} | {pm(q.precision)} | {pm(q.recall)} | {pm(q.F1)} | {pm(q.IoU_whole_record)} | {pm(q.Ignored, 1)} |")
     out += ["", "### T10c. A4a: gate peaks, `.atr` vs rodrigues2021 (gated, 6 dB)", "",
             "Gated MAE: noisy predictions against the clean labels on the set A windows each gate keeps (gate at the learned grid anchor), masked pairs out.", "",
-            "| pipeline | gate | TP | FP | FN | F1 | false-alarm h | II kept % | II MAE (mV) | V2 kept % | V2 MAE (mV) |", "|---|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|"]
-    for pipe in ("L1", "L2", "NK-FP"):
+            "| pipeline | gate | TP | FP | FN | F1 | II kept % | II MAE (mV) | V2 kept % | V2 MAE (mV) |", "|---|---|--:|--:|--:|--:|--:|--:|--:|--:|"]
+    for pipe in FIGP:
         for gate in ("rodrigues2021", ".atr"):
             q = A[(A.ablation == "A4a") & (A.pipeline == pipe) & (A.gate == gate)].iloc[0]
             g = {L: GM[(GM.pipeline == pipe) & (GM.gate == gate) & (GM.lead == L)].iloc[0] for L in LEADS}
-            out.append(f"| {pipe}{' (S1)' if pipe != 'NK-FP' else ''} | {gate} | {int(q.TP)} | {int(q.FP)} | {int(q.FN)} | {q.F1:.3f} | {q.false_hours:.1f} | {g['II'].kept_pct:.1f} | {g['II'].MAE_gated:.4f} | {g['V2'].kept_pct:.1f} | {g['V2'].MAE_gated:.4f} |")
+            out.append(f"| {pipe}{' (S1)' if pipe != 'NK-FP' else ''} | {gate} | {int(q.TP)} | {int(q.FP)} | {int(q.FN)} | {q.F1:.3f} | {g['II'].kept_pct:.1f} | {g['II'].MAE_gated:.4f} | {g['V2'].kept_pct:.1f} | {g['V2'].MAE_gated:.4f} |")
     out += ["", "### T10d. A4b: SQI threshold sweep (rodrigues2021 gate)", "",
             "Every 5 dB shown; all 46 thresholds (−20 to +25 dB, 1 dB steps) in `Tasks/final/runs/step7_t10/T10_A4b_sweep.csv` and `docs/thesis_figures/FigA4b_gate_threshold_sweep.pdf`.", "",
             "| threshold (dB) | pipeline | TP | FP | FN | F1 | II kept % | II MAE (mV) | V2 kept % | V2 MAE (mV) |", "|--:|---|--:|--:|--:|--:|--:|--:|--:|--:|"]
     for thr in [t for t in SWEEP if t % 5 == 0 or t == 6]:
-        for pipe in ("L1", "L2", "NK-FP"):
+        for pipe in FIGP:
             q = S[(S.threshold_db == thr) & (S.pipeline == pipe)].iloc[0]
             out.append(f"| {thr:+d}{' (main)' if thr == 6 else ''} | {pipe}{' (S1)' if pipe != 'NK-FP' else ''} | {int(q.TP)} | {int(q.FP)} | {int(q.FN)} | {q.F1:.3f} | {q.kept_pct_II:.1f} | {q.MAE_gated_II:.4f} | {q.kept_pct_V2:.1f} | {q.MAE_gated_V2:.4f} |")
     upsert("t10", "\n".join(out))
@@ -361,7 +354,7 @@ def md_fig1(St):
            "LoA = bias ± 1.96 SD of the difference; slope = OLS of the difference on the mean (negative = compression of large deviations).", "",
            "| lead | pipeline | n beats | bias (mV) | SD (mV) | 95 % LoA (mV) | slope (diff on mean) | MAE (mV) |", "|---|---|--:|--:|--:|---|--:|--:|"]
     for L in LEADS:
-        for pipe in ("L1", "L2", "NK-FP"):
+        for pipe in FIGP:
             s = St[(St.pipeline == pipe) & (St.lead == L)].iloc[0]
             out.append(f"| {L} | {pipe}{' (S1)' if pipe != 'NK-FP' else ''} | {int(s.n)} | {s.bias:+.4f} | {s.sd:.4f} | [{s.loa_lo:+.4f}, {s.loa_hi:+.4f}] | {s.slope_diff_on_mean:+.3f} | {s.MAE:.4f} |")
     upsert("fig1", "\n".join(out))
@@ -388,47 +381,47 @@ def tex_all(A, Rg, GM, S, St):
         for abl, pipe in ORDER:
             q = Rg[(Rg.ablation == abl) & (Rg.pipeline == pipe) & (Rg.lead == L)]
             body.append(f"{abl} & {L} & {LABEL.get(pipe, pipe)} & {seeds_of(q).replace('–', '--')} & {tpm(q.coverage_pct, 1)} & {tpm(q.MAE, 4)} & {tpm(q.bias, 4)} & {tpm(q.RMSE, 4)} & {tpm(q.slope)} & {tpm(q.r)} & {tpm(q.p100_pct, 1)} & {tpm(q.R2)}")
-    tex_write("T10_ablations_regression", "Ablations A1--A3: ST-deviation regression on all 10\\,s windows, clean signal (T10a).", "tab:t10_regression",
+    tex_write("T10_ablations_regression", "Ablations A1--A2: ST-deviation regression on all 10\\,s windows, clean signal (T10a).", "tab:t10_regression",
               "llllrrrrrrrr", "Abl. & Lead & Pipeline & Seeds & Cov.\\ (\\%) & MAE (mV) & Bias (mV) & RMSE (mV) & Slope & $r$ & p100 (\\%) & $R^2$", body,
               "Each ablation row follows the row it is compared with. A1: supervised, no pre-trained backbone. A2: L1-old = published CMBEC single-lead models. "
-              "A3: NK-FP-nk = fixed point on NeuroKit's own R-peaks; NK-PR-pub = published paper-rule values. Masked record--lead pairs excluded; S1--S3: mean $\\pm$ SD over training seeds.")
+              "Masked record--lead pairs excluded; S1--S3: mean $\\pm$ SD over training seeds.")
     body = []
     for abl, pipe in ORDER:
         for cond in ("clean", "noisy", "gated"):
             q = A[(A.ablation == abl) & (A.pipeline == pipe) & (A.condition == cond)]
             gate = "--" if cond != "gated" else ("rod." if q.gate.iloc[0] == "rodrigues2021" else "\\texttt{.atr}")
-            body.append(f"{abl} & {cond.capitalize()} & {LABEL.get(pipe, pipe)} & {seeds_of(q).replace('–', '--')} & {gate} & {tpm(q.TP, 1)} & {tpm(q.FP, 1)} & {tpm(q.FN, 1)} & {tpm(q.precision)} & {tpm(q.recall)} & {tpm(q.F1)} & {tpm(q.false_hours, 1)} & {tpm(q.Ignored, 1)}")
+            body.append(f"{abl} & {cond.capitalize()} & {LABEL.get(pipe, pipe)} & {seeds_of(q).replace('–', '--')} & {gate} & {tpm(q.TP, 1)} & {tpm(q.FP, 1)} & {tpm(q.FN, 1)} & {tpm(q.precision)} & {tpm(q.recall)} & {tpm(q.F1)} & {tpm(q.Ignored, 1)}")
         if (abl, pipe) != ORDER[-1]:
             body.append("MIDRULE")
-    tex_write("T10_ablations_alarms", "Ablations A1--A3: ST-deviation episode alarms (T10b).", "tab:t10_alarms",
-              "lllllrrrrrrrr", "Abl. & Condition & Pipeline & Seeds & Gate & TP & FP & FN & Precision & Recall & F1 & FA (h) & Redundant", body,
-              "Union of lead II and V2 alarms, 101 episodes, 15 records; noisy: NSTDB em, seed 42; gate 6\\,dB on rodrigues2021 R-peaks (rod.) or annotated beats (\\texttt{.atr}). "
+    tex_write("T10_ablations_alarms", "Ablations A1--A2: ST-deviation episode alarms (T10b).", "tab:t10_alarms",
+              "lllllrrrrrrr", "Abl. & Condition & Pipeline & Seeds & Gate & TP & FP & FN & P & R & F1 & Redundant", body,
+              "Alarms of both leads, each scored against the gold-standard episodes of its own lead; counts pooled over the 26 evaluated record--lead pairs. Precision (P) = TP/(TP+FP); recall (R) = TP/(TP+FN). 101 episodes, 15 records; noisy: NSTDB em, seed 42; gate 6\\,dB on rodrigues2021 R-peaks (rod.) or annotated beats (\\texttt{.atr}). "
               "S1--S3: mean $\\pm$ SD over training seeds.")
     body = []
-    for pipe in ("L1", "L2", "NK-FP"):
+    for pipe in FIGP:
         for gate in ("rodrigues2021", ".atr"):
             q = A[(A.ablation == "A4a") & (A.pipeline == pipe) & (A.gate == gate)].iloc[0]
             g = {L: GM[(GM.pipeline == pipe) & (GM.gate == gate) & (GM.lead == L)].iloc[0] for L in LEADS}
             gtex = "rodrigues2021" if gate != ".atr" else "\\texttt{.atr}"
-            body.append(f"{pipe}{' (S1)' if pipe != 'NK-FP' else ''} & {gtex} & {int(q.TP)} & {int(q.FP)} & {int(q.FN)} & {q.F1:.3f} & {q.false_hours:.1f} & {g['II'].kept_pct:.1f} & {g['II'].MAE_gated:.4f} & {g['V2'].kept_pct:.1f} & {g['V2'].MAE_gated:.4f}")
+            body.append(f"{pipe}{' (S1)' if pipe != 'NK-FP' else ''} & {gtex} & {int(q.TP)} & {int(q.FP)} & {int(q.FN)} & {q.F1:.3f} & {g['II'].kept_pct:.1f} & {g['II'].MAE_gated:.4f} & {g['V2'].kept_pct:.1f} & {g['V2'].MAE_gated:.4f}")
     tex_write("T10_A4a_gate_peaks", "Ablation A4a: R-peaks for the SQI gate, annotated beats vs rodrigues2021 (gated, 6\\,dB; T10c).", "tab:t10_a4a",
-              "llrrrrrrrrr", "Pipeline & Gate peaks & TP & FP & FN & F1 & FA (h) & II kept (\\%) & II MAE (mV) & V2 kept (\\%) & V2 MAE (mV)", body,
-              "Gated MAE: noisy predictions against clean labels on the 10\\,s windows the gate keeps; masked pairs excluded.")
+              "llrrrrrrrr", "Pipeline & Gate peaks & TP & FP & FN & F1 & II kept (\\%) & II MAE (mV) & V2 kept (\\%) & V2 MAE (mV)", body,
+              "Alarms of both leads, each scored against the gold-standard episodes of its own lead; counts pooled over the 26 evaluated record--lead pairs. Precision (P) = TP/(TP+FP); recall (R) = TP/(TP+FN). Gated MAE: noisy predictions against clean labels on the 10\\,s windows the gate keeps; masked pairs excluded.")
     body = []
     for thr in [t for t in SWEEP if t % 5 == 0 or t == 6]:
-        for n, pipe in enumerate(("L1", "L2", "NK-FP")):
+        for n, pipe in enumerate(FIGP):
             q = S[(S.threshold_db == thr) & (S.pipeline == pipe)].iloc[0]
             body.append(f"{neg(thr, 0) if n == 0 else ''} & {pipe}{' (S1)' if pipe != 'NK-FP' else ''} & {int(q.TP)} & {int(q.FP)} & {int(q.FN)} & {q.F1:.3f} & {q.kept_pct_II:.1f} & {q.MAE_gated_II:.4f} & {q.kept_pct_V2:.1f} & {q.MAE_gated_V2:.4f}")
         if thr != 25:
             body.append("MIDRULE")
     tex_write("T10_A4b_threshold_sweep", "Ablation A4b: SQI threshold sweep, rodrigues2021 gate (T10d).", "tab:t10_a4b",
               "rlrrrrrrrr", "Thr.\\ (dB) & Pipeline & TP & FP & FN & F1 & II kept (\\%) & II MAE (mV) & V2 kept (\\%) & V2 MAE (mV)", body,
-              "Every 5\\,dB and the main threshold (6\\,dB); 1\\,dB steps from $-$20 to +25\\,dB in the companion figure. NSTDB em, seed 42.")
+              "Every 5\\,dB and the main threshold (6\\,dB); 1\\,dB steps from $-$20 to +25\\,dB in the companion figure. NSTDB em, seed 42. Alarms of both leads, each scored against the gold-standard episodes of its own lead; counts pooled over the 26 evaluated record--lead pairs. Precision (P) = TP/(TP+FP); recall (R) = TP/(TP+FN).")
     body = []
     for i, L in enumerate(LEADS):
         if i:
             body.append("MIDRULE")
-        for pipe in ("L1", "L2", "NK-FP"):
+        for pipe in FIGP:
             s = St[(St.pipeline == pipe) & (St.lead == L)].iloc[0]
             body.append(f"{L} & {pipe}{' (S1)' if pipe != 'NK-FP' else ''} & {int(s.n)} & {neg(s.bias, 4)} & {s.sd:.4f} & [{neg(s.loa_lo, 4)}, {neg(s.loa_hi, 4)}] & {neg(s.slope_diff_on_mean, 3)}")
     tex_write("Fig1_bland_altman_stats", "Bland--Altman agreement with expert ST deviation on DMY beats, clean signal (Fig.~1).", "tab:fig1_ba",

@@ -1,8 +1,8 @@
-% T10_ablations_regression: generated 2026-11-24 03:34:31 by src/scripts/final/fin_step7_t10_fig1.py (VM). Needs \usepackage{booktabs}.
+% T10_ablations_regression: generated 2026-11-24 04:18:48 by src/scripts/final/fin_step7_t10_fig1.py (VM). Needs \usepackage{booktabs}.
 \begin{table}[htbp]
 \centering
 \small
-\caption{Ablations A1--A3: ST-deviation regression on all 10\,s windows, baseline condition (T10a).}
+\caption{Ablations A1--A2: ST-deviation regression on all 10\,s windows, baseline condition (T10a).}
 \label{tab:t10_regression}
 \begin{tabular}{llllrrrrrrrr}
 \toprule
@@ -14,10 +14,6 @@ A1 & II & Learned-2L (pretrained) & S1--S3 & 100.0 $\pm$ 0.0 & 0.0290 $\pm$ 0.00
 A1 & II & Learned-2L (supervised-only) & S1--S3 & 100.0 $\pm$ 0.0 & 0.0361 $\pm$ 0.0010 & 0.0034 $\pm$ 0.0017 & 0.0586 $\pm$ 0.0027 & 0.560 $\pm$ 0.014 & 0.848 $\pm$ 0.023 & 7.0 $\pm$ 0.2 & 0.682 $\pm$ 0.029 \\
 A2 & II & Learned-1L (pretrained) & S1--S3 & 100.0 $\pm$ 0.0 & 0.0288 $\pm$ 0.0003 & 0.0033 $\pm$ 0.0010 & 0.0429 $\pm$ 0.0005 & 0.702 $\pm$ 0.016 & 0.928 $\pm$ 0.002 & 4.7 $\pm$ 0.8 & 0.830 $\pm$ 0.004 \\
 A2 & II & Learned-1L (published) & published & 100.0 & 0.0307 & 0.0014 & 0.0465 & 0.655 & 0.918 & 6.4 & 0.801 \\
-A3 & II & Fiducial-FP & - & 100.0 & 0.0127 & $-$0.0039 & 0.0181 & 0.948 & 0.986 & 0.0 & 0.970 \\
-A3 & II & Fiducial-FP (NeuroKit peaks) & - & 100.0 & 0.0126 & $-$0.0046 & 0.0190 & 0.937 & 0.985 & 0.1 & 0.967 \\
-A3 & II & Fiducial & - & 80.7 & 0.0346 & $-$0.0309 & 0.0638 & 0.935 & 0.851 & 7.5 & 0.561 \\
-A3 & II & Fiducial (published) & - & 79.9 & 0.0355 & $-$0.0317 & 0.0645 & 0.936 & 0.845 & 7.6 & 0.531 \\
 \midrule
 A1 & V2 & Learned-1L (pretrained) & S1--S3 & 100.0 $\pm$ 0.0 & 0.0355 $\pm$ 0.0003 & 0.0077 $\pm$ 0.0006 & 0.0444 $\pm$ 0.0002 & 0.374 $\pm$ 0.012 & 0.502 $\pm$ 0.006 & 2.6 $\pm$ 0.4 & 0.168 $\pm$ 0.006 \\
 A1 & V2 & Learned-1L (supervised-only) & S1--S3 & 100.0 $\pm$ 0.0 & 0.0336 $\pm$ 0.0013 & 0.0050 $\pm$ 0.0021 & 0.0426 $\pm$ 0.0009 & 0.429 $\pm$ 0.028 & 0.550 $\pm$ 0.006 & 2.2 $\pm$ 0.2 & 0.236 $\pm$ 0.031 \\
@@ -25,12 +21,8 @@ A1 & V2 & Learned-2L (pretrained) & S1--S3 & 100.0 $\pm$ 0.0 & 0.0290 $\pm$ 0.00
 A1 & V2 & Learned-2L (supervised-only) & S1--S3 & 100.0 $\pm$ 0.0 & 0.0349 $\pm$ 0.0016 & 0.0004 $\pm$ 0.0035 & 0.0436 $\pm$ 0.0019 & 0.358 $\pm$ 0.035 & 0.498 $\pm$ 0.046 & 2.3 $\pm$ 0.7 & 0.197 $\pm$ 0.068 \\
 A2 & V2 & Learned-1L (pretrained) & S1--S3 & 100.0 $\pm$ 0.0 & 0.0355 $\pm$ 0.0003 & 0.0077 $\pm$ 0.0006 & 0.0444 $\pm$ 0.0002 & 0.374 $\pm$ 0.012 & 0.502 $\pm$ 0.006 & 2.6 $\pm$ 0.4 & 0.168 $\pm$ 0.006 \\
 A2 & V2 & Learned-1L (published) & published & 100.0 & 0.0384 & 0.0154 & 0.0466 & 0.316 & 0.473 & 2.6 & 0.085 \\
-A3 & V2 & Fiducial-FP & - & 100.0 & 0.0109 & $-$0.0043 & 0.0197 & 1.041 & 0.936 & 0.1 & 0.837 \\
-A3 & V2 & Fiducial-FP (NeuroKit peaks) & - & 100.0 & 0.0323 & 0.0174 & 0.1176 & 0.922 & 0.360 & 4.7 & $-$4.832 \\
-A3 & V2 & Fiducial & - & 75.0 & 0.0441 & $-$0.0415 & 0.0587 & 0.670 & 0.663 & 8.7 & $-$0.358 \\
-A3 & V2 & Fiducial (published) & - & 88.4 & 0.0433 & $-$0.0405 & 0.0582 & 0.626 & 0.637 & 8.8 & $-$0.387 \\
 \bottomrule
 \end{tabular}
 
-\par\smallskip\footnotesize Each ablation row follows the row it is compared with. A1: supervised, no pre-trained backbone. A2: Learned-1L (published) = published CMBEC single-lead models. A3: Fiducial-FP (NeuroKit peaks) = fixed point on NeuroKit's own R-peaks; Fiducial (published) = published paper-rule values. Excluded record--lead pairs not scored; S1--S3: mean $\pm$ SD over training seeds.
+\par\smallskip\footnotesize Each ablation row follows the row it is compared with. A1: supervised, no pre-trained backbone. A2: Learned-1L (published) = published CMBEC single-lead models. Excluded record--lead pairs not scored; S1--S3: mean $\pm$ SD over training seeds.
 \end{table}

@@ -1,4 +1,4 @@
-% T7_paired_differences: generated 2026-11-24 03:30:49 by src/scripts/final/fin_step7_tier1.py (VM). Needs \usepackage{booktabs}.
+% T7_paired_differences: generated 2026-11-24 04:16:09 by src/scripts/final/fin_step7_tier1.py (VM). Needs \usepackage{booktabs}.
 \begin{table}[htbp]
 \centering
 \small
@@ -12,14 +12,6 @@ Learned-2L (pretrained) $-$ Learned-1L (pretrained) & $\Delta$F1 (union) & 0.770
 Learned-2L (pretrained) $-$ Learned-1L (pretrained) & $\Delta$FP (union) & 20.0 & 24.0 & $-$4.0 & [$-$14.3, +7.3] \\
 Learned-2L (pretrained) $-$ Learned-1L (pretrained) & $\Delta$MAE II (mV) & 0.0292 & 0.0288 & +0.0004 & [$-$0.0027, +0.0038] \\
 Learned-2L (pretrained) $-$ Learned-1L (pretrained) & $\Delta$MAE V2 (mV) & 0.0303 & 0.0359 & $-$0.0056 & [$-$0.0118, +0.0007] \\
-Learned-2L (pretrained) $-$ Fiducial-FP & $\Delta$F1 (union) & 0.770 & 0.880 & $-$0.110$^{*}$ & [$-$0.198, $-$0.022] \\
-Learned-2L (pretrained) $-$ Fiducial-FP & $\Delta$FP (union) & 20.0 & 6.0 & +14.0 & [$-$2.3, +37.0] \\
-Learned-2L (pretrained) $-$ Fiducial-FP & $\Delta$MAE II (mV) & 0.0292 & 0.0125 & +0.0167$^{*}$ & [+0.0069, +0.0316] \\
-Learned-2L (pretrained) $-$ Fiducial-FP & $\Delta$MAE V2 (mV) & 0.0303 & 0.0110 & +0.0193$^{*}$ & [+0.0122, +0.0269] \\
-Learned-1L (pretrained) $-$ Fiducial-FP & $\Delta$F1 (union) & 0.752 & 0.880 & $-$0.127$^{*}$ & [$-$0.217, $-$0.050] \\
-Learned-1L (pretrained) $-$ Fiducial-FP & $\Delta$FP (union) & 24.0 & 6.0 & +18.0$^{*}$ & [+1.7, +37.7] \\
-Learned-1L (pretrained) $-$ Fiducial-FP & $\Delta$MAE II (mV) & 0.0288 & 0.0125 & +0.0163$^{*}$ & [+0.0075, +0.0290] \\
-Learned-1L (pretrained) $-$ Fiducial-FP & $\Delta$MAE V2 (mV) & 0.0359 & 0.0110 & +0.0249$^{*}$ & [+0.0171, +0.0334] \\
 Learned-2L (pretrained) $-$ Fiducial & $\Delta$F1 (union) & 0.770 & 0.702 & +0.068 & [$-$0.085, +0.204] \\
 Learned-2L (pretrained) $-$ Fiducial & $\Delta$FP (union) & 20.0 & 21.0 & $-$1.0 & [$-$19.3, +25.0] \\
 Learned-2L (pretrained) $-$ Fiducial & $\Delta$MAE II (mV) & 0.0292 & 0.0341 & $-$0.0049 & [$-$0.0318, +0.0182] \\
@@ -35,5 +27,5 @@ Learned-2L (pretrained) $-$ Learned-2L (supervised-only) & $\Delta$MAE V2 (mV) &
 \bottomrule
 \end{tabular}
 
-\par\smallskip\footnotesize Record-clustered paired bootstrap, 5,000 resamples; training seeds averaged inside each resample. $\Delta$MAE: windows the gate keeps, predictions in the artifact condition against baseline labels, excluded pairs not scored. $^{*}$: 95\,\% CI excludes zero.
+\par\smallskip\footnotesize Record-clustered paired bootstrap, 5,000 resamples; training seeds averaged inside each resample. $\Delta$F1 and $\Delta$FP: Alarms of both leads, each scored against the gold-standard episodes of its own lead; counts pooled over the 26 evaluated record--lead pairs. Precision (P) = TP/(TP+FP); recall (R) = TP/(TP+FN). $\Delta$MAE: windows the gate keeps, predictions in the artifact condition against baseline labels, excluded pairs not scored. $^{*}$: 95\,\% CI excludes zero.
 \end{table}

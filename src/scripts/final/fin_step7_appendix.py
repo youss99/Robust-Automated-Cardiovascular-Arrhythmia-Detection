@@ -59,7 +59,6 @@ ROWS = [  # (section, label, key in pre-training params, key in fine-tuning para
     ("Architecture", "Input normalisation", "revin_mode", "revin_mode"),
     ("Architecture", "Head", "head_type", ("head_type", "class_token")),
     ("Input", "Leads", "custom_lead_selection", "custom_lead_selection"),
-    ("Input", "Context points", "context_points", "context_points"),
     ("Objective", "Mask ratio", "mask_ratio", None),
     ("Objective", "Loss", None, "regression_loss"),
     ("Objective", "Data augmentation", "data_augmentation", "data_augmentation"),
@@ -156,9 +155,15 @@ def hyperparams():
                 if v is None:
                     raise SystemExit(f"{t}: {lab} not constant")
                 row[t] = v
+        if lab == "Encoder":   # plain terms (user, 2026-11-24)
+            assert {row[c] for c in ("pre_single", "pre_two", *TYPES)} == {"vanilla\\_vit"}, row
+            row.update({c: "ViT encoder" for c in ("pre_single", "pre_two", *TYPES)})
+        if lab == "Head":
+            assert {row["pre_single"], row["pre_two"]} == {"PRETRAIN"} and {row[t] for t in TYPES} == {"REGRESSION / CLS\\_TOKEN"}, row
+            row.update({"pre_single": "linear reconstruction head", "pre_two": "linear reconstruction head", **{t: "linear regression head on the CLS token" for t in TYPES}})
         if lab == "Input normalisation":
             assert {row[c] for c in ("pre_single", "pre_two", *TYPES)} == {"BN"}, row
-            row.update({c: "RevIN, batch statistics" for c in ("pre_single", "pre_two", *TYPES)})
+            row.update({c: "per-lead standardisation with batch statistics" for c in ("pre_single", "pre_two", *TYPES)})
         table.append(row)
     eff = {"pre_single": effective("pre_single", [pre["II"], pre["V2"]]), "pre_two": effective("pre_two", [two]), **{t: effective(t, ft[t]) for t in TYPES}}
     for lab in EFFECTIVE:
@@ -204,7 +209,8 @@ def hyperparams():
 
 
 # ------------------------------------------------------------------ per_record
-SYS = [("Fiducial-FP", "NK-FP", "-", "NK-FP_gated.csv"), ("L1", "L1", "S1", "L1_S1_gated.csv"), ("L2", "L2", "S1", "L2_S1_gated.csv")]
+SYS = [("Fiducial", "NK-PR", "-", "NK-PR_gated.csv"),  # was Fiducial-FP (dropped, DECISIONS.md 2026-11-24)
+       ("L1", "L1", "S1", "L1_S1_gated.csv"), ("L2", "L2", "S1", "L2_S1_gated.csv")]
 
 
 def per_record():
@@ -245,9 +251,8 @@ def per_record():
             pooled = g.abs_err_sum.sum() / g.n_windows.sum()
             t7 = T7[T7.metric == f"dMAE {L} (mV)"]
             tv = t7[t7.comparison.str.startswith(key + " -")].value_a.iloc[0] if (t7.comparison.str.startswith(key + " -")).any() else t7[t7.comparison.str.endswith("- " + key)].value_b.iloc[0]
-            same = key == "NK-FP" or True
             # T7 averages the three training seeds for L1 / L2; S1 alone is compared with T10c (A4a), which is S1
-            if key == "NK-FP":
+            if key == "NK-PR":
                 good = np.isclose(pooled, tv, atol=5e-5)
                 lines.append(f"{'PASS' if good else 'FAIL'}  {name} {L}: pooled gated MAE {pooled:.4f} equals T7 {tv:.4f}")
                 ok &= good
@@ -293,11 +298,11 @@ def per_record():
     body.append(" & ".join(tot))
     tex_write("appendix_per_record", "Per-record results, gated (artifact condition, noise seed 42, SQI gate 6\\,dB).", "tab:appendix_per_record",
               "llr" + "rrrr" * 3,
-              "Record & Lead & GS & \\multicolumn{4}{c}{Fiducial-FP} & \\multicolumn{4}{c}{L1 (S1)} & \\multicolumn{4}{c}{L2 (S1)} \\\\\n"
+              "Record & Lead & GS & \\multicolumn{4}{c}{NK-PR} & \\multicolumn{4}{c}{L1 (S1)} & \\multicolumn{4}{c}{L2 (S1)} \\\\\n"
               "\\cmidrule(lr){4-7}\\cmidrule(lr){8-11}\\cmidrule(lr){12-15}\n & & & TP & FP & FN & MAE & TP & FP & FN & MAE & TP & FP & FN & MAE",
               body,
               "GS: gold-standard ischemic episodes on that lead (periods meeting the PROSE criteria on the annotated .16a ST deviation). TP/FP/FN: that lead's "
-              "alarms scored against that lead's GS episodes (per-lead scope; the main tables score the union of both leads; here the per-lead totals equal the union totals, gated, S1). "
+              "alarms scored against that lead's GS episodes, as in the main tables (Alarms of both leads, each scored against the gold-standard episodes of its own lead; counts pooled over the 26 evaluated record--lead pairs. Precision (P) = TP/(TP+FP); recall (R) = TP/(TP+FN).); the per-lead totals equal the main tables' gated totals (S1). "
               "MAE (mV): windows kept by the SQI gate, estimates in the artifact condition against baseline labels. Masked record--lead pairs are excluded "
               "from all scoring.", size="\\scriptsize")
     return ok

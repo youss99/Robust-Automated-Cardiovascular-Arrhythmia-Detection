@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Final runs, step 7 tier 1 (DECISIONS.md 2026-11-21: T1, T5, T7 first): MON, NK-PR, NK-FP, L1, L2 -> RESULTS_FINAL.md (tier-1 sections).
+NK-FP is still scored (CSV outputs) but not shown in the tables (DECISIONS.md 2026-11-24); false-alarm hours are not shown.
 
 Inputs: step 6 predictions (Tasks/final/runs/step6), step 5 NeuroKit values and the gate table (Tasks/final/runs/step5), the published per-window
 oracle labels (Tasks/phase1/runs/_scores/oracle/oracle_grid.csv.gz: label = median .16a ee of the window's beats, the 10 s grid).
@@ -11,7 +12,7 @@ T1  clean, set A windows, per lead, masked pairs out: n, MAE, bias, RMSE, slope 
     mean +- SD (ddof 1) over S1-S3, plus each seed.
 T5  clean / noisy (seed 42) / gated (seed 42): TP, FP, FN, precision, recall, F1, IoU, false-alarm hours, duration Se and +P, redundant alarms
     (Ignored). Learned: mean +- SD over S1-S3. MON copied from the paper (gated TP 76, FP 54, FN 23; 99 episodes).
-T7  gated, seed 42: L2-L1, L2-NK-FP, L1-NK-FP, L2-NK-PR, L1-L1supE2E, L2-L2supE2E (supervised-only arm = the end-to-end runs, DECISIONS.md 2026-11-24;
+T7  gated, seed 42: L2-L1, L2-NK-PR, L1-L1supE2E, L2-L2supE2E (NK-FP dropped from the thesis, DECISIONS.md 2026-11-24), (supervised-only arm = the end-to-end runs, DECISIONS.md 2026-11-24;
     the 20 + 70 runs L1sup / L2sup are archived). Record-clustered paired bootstrap, 5,000 resamples (seed 20260805),
     training seeds averaged inside each resample. dF1 and dFP (union alarms, FULL scope); dMAE per lead on set A windows the gate keeps
     (gate at the learned anchor, the same gate for both pipelines; each pipeline on its own windows with a value; masked pairs out).
@@ -215,7 +216,7 @@ def reg_sums(f, recs):
 
 # ------------------------------------------------------------------ T7
 def t7(C, Fg):
-    pairs = [("L2", "L1"), ("L2", "NK-FP"), ("L1", "NK-FP"), ("L2", "NK-PR"), ("L1", "L1supE2E"), ("L2", "L2supE2E")]
+    pairs = [("L2", "L1"), ("L2", "NK-PR"), ("L1", "L1supE2E"), ("L2", "L2supE2E")]  # NK-FP comparisons dropped (DECISIONS.md 2026-11-24)
     idx15 = np.random.default_rng(BSEED).integers(0, len(RECS), size=(NB, len(RECS)))
     cg = C[C.condition == "gated"]
 
@@ -272,20 +273,20 @@ def md_tier1(T1t, R, T7t, ctl_lines):
             "Slope = OLS of prediction on label.", "",
             "| lead | pipeline | coverage % | n | MAE (mV) | bias (mV) | RMSE (mV) | slope | r | p100 % | R² |", "|---|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|"]
     for L in LEADS:
-        for pipe in ("L1", "L2", "NK-PR", "NK-FP"):
+        for pipe in ("L1", "L2", "NK-PR"):
             q = T1t[(T1t.pipeline == pipe) & (T1t.lead == L)]
             out.append(f"| {L} | {pipe} | {pm(q.coverage_pct, 1)} | {pm(q.n, 0)} | {pm(q.MAE, 4)} | {pm(q.bias, 4)} | {pm(q.RMSE, 4)} | {pm(q.slope)} | {pm(q.r)} | {pm(q.p100_pct, 1)} | {pm(q.R2)} |")
     out += ["", "### T5. Alarms, main table", "",
-            "Union of II and V2 alarms, FULL scope. Duration Se / +P = time sensitivity / time PPV; redundant = Ignored (extra alarms inside an already-detected episode); "
-            "false-alarm hours = time in false alarms. MON copied from the paper (episode counts only).", "",
-            "| condition | pipeline | TP | FP | FN | precision | recall | F1 | IoU | false-alarm h | duration Se | duration +P | redundant |", "|---|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|"]
+            "Alarms of both leads, each scored against the gold-standard episodes of its own lead; counts pooled over the 26 evaluated record–lead pairs. Precision (P) = TP/(TP+FP); recall (R) = TP/(TP+FN). Duration Se / +P = time sensitivity / time PPV; redundant = Ignored (extra alarms inside an already-detected episode). "
+            "MON copied from the paper (episode counts only).", "",
+            "| condition | pipeline | TP | FP | FN | precision | recall | F1 | IoU | duration Se | duration +P | redundant |", "|---|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|"]
     for cond in ("clean", "noisy", "gated"):
         tp, fp, fn = MON[cond]
         p_, r_ = tp / (tp + fp), tp / (tp + fn)
-        out.append(f"| {cond} | MON | {tp} | {fp} | {fn} | {p_:.3f} | {r_:.3f} | {2 * p_ * r_ / (p_ + r_):.3f} | – | – | – | – | n/a |")
-        for pipe in ("NK-PR", "NK-FP", "L1", "L2"):
+        out.append(f"| {cond} | MON | {tp} | {fp} | {fn} | {p_:.3f} | {r_:.3f} | {2 * p_ * r_ / (p_ + r_):.3f} | – | – | – | n/a |")
+        for pipe in ("NK-PR", "L1", "L2"):
             q = R[(R.pipeline == pipe) & (R.condition == cond)]
-            out.append(f"| {cond} | {pipe} | {pm(q.TP, 1)} | {pm(q.FP, 1)} | {pm(q.FN, 1)} | {pm(q.precision)} | {pm(q.recall)} | {pm(q.F1)} | {pm(q.IoU_whole_record)} | {pm(q.false_hours, 1)} | {pm(q.sensitivity)} | {pm(q.PPV_time)} | {pm(q.Ignored, 1)} |")
+            out.append(f"| {cond} | {pipe} | {pm(q.TP, 1)} | {pm(q.FP, 1)} | {pm(q.FN, 1)} | {pm(q.precision)} | {pm(q.recall)} | {pm(q.F1)} | {pm(q.IoU_whole_record)} | {pm(q.sensitivity)} | {pm(q.PPV_time)} | {pm(q.Ignored, 1)} |")
     out += ["", "### T7. Paired differences (gated, seed 42)", "",
             f"Record-clustered paired bootstrap, {NB:,} resamples (seed {BSEED}); training seeds averaged inside each resample. dMAE: set A windows the gate keeps "
             "(gate at the learned anchor, same for both), noisy predictions against the clean labels, masked pairs out, each pipeline on its own windows. * = 95 % CI excludes 0.", "",
@@ -332,7 +333,7 @@ def tex_tier1(T1t, R, T7t):
     for i, L in enumerate(LEADS):
         if i:
             body.append("MIDRULE")
-        for pipe in ("L1", "L2", "NK-PR", "NK-FP"):
+        for pipe in ("L1", "L2", "NK-PR"):
             q = T1t[(T1t.pipeline == pipe) & (T1t.lead == L)]
             body.append(f"{L} & {pipe} & {tpm(q.coverage_pct, 1)} & {tpm(q.MAE, 4)} & {tpm(q.bias, 4)} & {tpm(q.RMSE, 4)} & {tpm(q.slope)} & {tpm(q.r)} & {tpm(q.p100_pct, 1)} & {tpm(q.R2)}")
     tex_write("T1_regression_clean", "ST-deviation regression on all 10\\,s windows, clean signal (T1).", "tab:t1_regression",
@@ -346,15 +347,15 @@ def tex_tier1(T1t, R, T7t):
             body.append("MIDRULE")
         tp, fp, fn = MON[cond]
         p_, r_ = tp / (tp + fp), tp / (tp + fn)
-        body.append(f"{cond.capitalize()} & MON & {tp} & {fp} & {fn} & {p_:.3f} & {r_:.3f} & {2 * p_ * r_ / (p_ + r_):.3f} & -- & -- & -- & -- & n/a")
-        for pipe in ("NK-PR", "NK-FP", "L1", "L2"):
+        body.append(f"{cond.capitalize()} & MON & {tp} & {fp} & {fn} & {p_:.3f} & {r_:.3f} & {2 * p_ * r_ / (p_ + r_):.3f} & -- & -- & -- & n/a")
+        for pipe in ("NK-PR", "L1", "L2"):
             q = R[(R.pipeline == pipe) & (R.condition == cond)]
             body.append(f" & {pipe} & {tpm(q.TP, 1)} & {tpm(q.FP, 1)} & {tpm(q.FN, 1)} & {tpm(q.precision)} & {tpm(q.recall)} & {tpm(q.F1)} & {tpm(q.IoU_whole_record)} & "
-                        f"{tpm(q.false_hours, 1)} & {tpm(q.sensitivity)} & {tpm(q.PPV_time)} & {tpm(q.Ignored, 1)}")
+                        f"{tpm(q.sensitivity)} & {tpm(q.PPV_time)} & {tpm(q.Ignored, 1)}")
     tex_write("T5_alarms_main", "ST-deviation episode alarms: clean, noisy and gated (T5).", "tab:t5_alarms",
-              "llrrrrrrrrrrr", "Condition & Pipeline & TP & FP & FN & Precision & Recall & F1 & IoU & FA (h) & Dur.\\ Se & Dur.\\ +P & Redundant", body,
-              "Union of lead II and V2 alarms, PROSE FSM, 101 ST-deviation episodes in 15 records (MON: 99 episodes, copied from Abdelazez et al.; episode counts only). "
-              "Noisy: NSTDB em, seed 42; gated: SQI from rodrigues2021 R-peaks, 6\\,dB. FA: false-alarm hours. Dur.\\ Se / +P: duration sensitivity / positive predictivity. "
+              "llrrrrrrrrrr", "Condition & Pipeline & TP & FP & FN & P & R & F1 & IoU & Dur.\\ Se & Dur.\\ +P & Redundant", body,
+              "Alarms of both leads, each scored against the gold-standard episodes of its own lead; counts pooled over the 26 evaluated record--lead pairs. Precision (P) = TP/(TP+FP); recall (R) = TP/(TP+FN). PROSE FSM, 101 ST-deviation episodes in 15 records (MON: 99 episodes, copied from Abdelazez et al.; episode counts only). "
+              "Noisy: NSTDB em, seed 42; gated: SQI from rodrigues2021 R-peaks, 6\\,dB. Dur.\\ Se / +P: duration sensitivity / positive predictivity. "
               "Redundant: extra alarms inside an already-detected episode. L1, L2: mean $\\pm$ SD over three training seeds.")
     body = []
     for t in T7t.itertuples():
@@ -365,6 +366,7 @@ def tex_tier1(T1t, R, T7t):
     tex_write("T7_paired_differences", "Paired differences between pipelines, gated, noise seed 42 (T7).", "tab:t7_paired",
               "llrrrl", "Comparison & Metric & A & B & A $-$ B & 95\\,\\% CI", body,
               f"Record-clustered paired bootstrap, {NB:,} resamples; training seeds averaged inside each resample. "
+              "$\\Delta$F1 and $\\Delta$FP: Alarms of both leads, each scored against the gold-standard episodes of its own lead; counts pooled over the 26 evaluated record--lead pairs. Precision (P) = TP/(TP+FP); recall (R) = TP/(TP+FN). "
               "$\\Delta$MAE: windows the gate keeps, noisy predictions against clean labels, masked pairs excluded. $^{*}$: 95\\,\\% CI excludes zero.")
 
 

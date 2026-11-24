@@ -1,4 +1,4 @@
-% T0_fold_data: generated 2026-11-22 01:32:48 by src/scripts/final/fin_step7_data_ceiling.py (VM). Needs \usepackage{booktabs}.
+% T0_fold_data: generated 2026-11-24 04:23:16 by src/scripts/final/fin_step7_data_reference.py (VM). Needs \usepackage{booktabs}.
 \begin{table}[htbp]
 \centering
 \small
@@ -6,7 +6,7 @@
 \label{tab:t0_folds}
 \begin{tabular}{llrrrrrr}
 \toprule
-Fold & Split & Records & Windows & II w/o excluded & V2 w/o excluded & II episodes & V2 episodes \\
+Fold & Split & Records & Windows & \begin{tabular}[c]{@{}c@{}}II windows\\(scored)\end{tabular} & \begin{tabular}[c]{@{}c@{}}V2 windows\\(scored)\end{tabular} & \begin{tabular}[c]{@{}c@{}}II ischemic\\episodes\end{tabular} & \begin{tabular}[c]{@{}c@{}}V2 ischemic\\episodes\end{tabular} \\
 \midrule
 1 & Train & 10 & 78{,}797 & 63{,}201 & 62{,}892 & 42 & 20 \\
  & Validation & 2 & 15{,}609 & 15{,}609 & 15{,}609 & 12 & 4 \\
@@ -33,5 +33,5 @@ Fold & Split & Records & Windows & II w/o excluded & V2 w/o excluded & II episod
 \bottomrule
 \end{tabular}
 
-\par\smallskip\footnotesize Windows: 10\,s segments with both targets (the rows the trainer used); excluded record--lead pairs stay in training and are not scored (columns w/o excluded). Episodes: gold-standard ST episodes per lead (69 II + 32 V2), none on an excluded pair. Record IDs (LTST s-numbers): fold 1: validation 20101 20231, test 20051 20211 20221, unused 20081; fold 2: validation 20011 20231, test 20081 20101 20141; fold 3: validation 20011 20141, test 20061 20091 20241; fold 4: validation 20061 20071, test 20111 20131 20231, unused 20081; fold 5: validation 20131 20141, test 20011 20071 20201, unused 20241.
+\par\smallskip\footnotesize Windows: 10\,s segments with both targets (the rows the trainer used); excluded record--lead pairs stay in training and are not scored (the scored columns leave them out). Episodes: gold-standard ischemic episodes per lead (69 II + 32 V2), none on an excluded pair. Record IDs (LTST s-numbers): fold 1: validation 20101 20231, test 20051 20211 20221, unused 20081; fold 2: validation 20011 20231, test 20081 20101 20141; fold 3: validation 20011 20141, test 20061 20091 20241; fold 4: validation 20061 20071, test 20111 20131 20231, unused 20081; fold 5: validation 20131 20141, test 20011 20071 20201, unused 20241.
 \end{table}

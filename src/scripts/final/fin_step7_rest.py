@@ -2,7 +2,7 @@
 """Final runs, step 7, remaining tables (user, 2026-11-22: T2, T3, T4, T6 in that order; T8, T9 skipped). One table per call.
 
 Same labels, predictions, NeuroKit values, gate tables, alarm path and scorer as fin_step7_tier1.py (imported, unchanged).
-Pipelines L1, L2 (mean +- SD over S1-S3 unless stated), NK-PR, NK-FP; masked pairs excluded; 15 records.
+Pipelines L1, L2 (mean +- SD over S1-S3 unless stated), NK-PR (NK-FP dropped, DECISIONS.md 2026-11-24); masked pairs excluded; 15 records.
 T2  clean, DMY beats: label = DMY ee; value = the 10 s window containing the beat (k = sample_16a // 2500; C section 9, phase 1's set B).
     T1's metrics + coverage (share of DMY beats with a value).
 T3  clean, set A windows, by |true ST| band: < 0.05, 0.05-0.10, 0.10-0.20, >= 0.20 mV (lower bound inclusive). n, MAE, bias (p - y), and the
@@ -28,7 +28,7 @@ import fin_step7_t10_fig1 as X  # noqa: E402  (upsert, tex_write)
 P = T.P
 OUT = Path("/home/student/GIT/Tasks/final/runs/step7_rest")
 LEADS, MASK, WIN, SEEDS = T.LEADS, T.MASK, T.WIN, T.SEEDS
-PIPES = ("L1", "L2", "NK-PR", "NK-FP")
+PIPES = ("L1", "L2", "NK-PR")  # NK-FP dropped from the thesis (DECISIONS.md 2026-11-24)
 BANDS = [("< 0.05", 0.0, 0.05), ("0.05–0.10", 0.05, 0.10), ("0.10–0.20", 0.10, 0.20), ("≥ 0.20", 0.20, np.inf)]
 X.tex_write.__globals__["time"] = time
 SCRIPT = "src/scripts/final/fin_step7_rest.py"
@@ -228,21 +228,21 @@ def t6():
         chk.append(f"{'PASS' if same else 'FAIL'}  T6 seed 42 equals tier-1 gated {pipe} {s}")
     ok = all(c.startswith("PASS") for c in chk)
     out = head("## T6. Alarm robustness across noise seeds (gated)", "NSTDB `em` seeds 42, 43, 44, each with its own noisy signal, predictions, NeuroKit values and SQI gate "
-               "(rodrigues2021 peaks, 6 dB). Union, FULL scope. Mean ± SD (ddof 1) over the three noise seeds; L1, L2: training seed S1. "
+               "(rodrigues2021 peaks, 6 dB). " + 'Alarms of both leads, each scored against the gold-standard episodes of its own lead; counts pooled over the 26 evaluated record–lead pairs. Precision (P) = TP/(TP+FP); recall (R) = TP/(TP+FN).' + " Mean ± SD (ddof 1) over the three noise seeds; L1, L2: training seed S1. "
                f"Check: seed 42 equals the tier-1 gated rows ({sum(c.startswith('PASS') for c in chk)} / {len(chk)}).")
-    out += ["| pipeline | TP | FP | FN | F1 | false-alarm h | per seed 42 / 43 / 44: TP / FP / FN |", "|---|--:|--:|--:|--:|--:|---|"]
+    out += ["| pipeline | TP | FP | FN | F1 | per seed 42 / 43 / 44: TP / FP / FN |", "|---|--:|--:|--:|--:|---|"]
     body = []
     for pipe in PIPES:
         q = R[R.pipeline == pipe].sort_values("noise_seed")
         lab = pipe + (" (S1)" if pipe in ("L1", "L2") else "")
         per = "; ".join(f"{int(r.TP)}/{int(r.FP)}/{int(r.FN)}" for r in q.itertuples())
-        out.append(f"| {lab} | {pmx(q, 'TP', 1)} | {pmx(q, 'FP', 1)} | {pmx(q, 'FN', 1)} | {pmx(q, 'F1', 3)} | {pmx(q, 'false_hours', 1)} | {per} |")
-        body.append(f"{lab} & {tpmx(q, 'TP', 1)} & {tpmx(q, 'FP', 1)} & {tpmx(q, 'FN', 1)} & {tpmx(q, 'F1', 3)} & {tpmx(q, 'false_hours', 1)}")
+        out.append(f"| {lab} | {pmx(q, 'TP', 1)} | {pmx(q, 'FP', 1)} | {pmx(q, 'FN', 1)} | {pmx(q, 'F1', 3)} | {per} |")
+        body.append(f"{lab} & {tpmx(q, 'TP', 1)} & {tpmx(q, 'FP', 1)} & {tpmx(q, 'FN', 1)} & {tpmx(q, 'F1', 3)}")
     X.upsert("t6", "\n".join(out))
     tex_write("T6_alarm_robustness", "ST-deviation episode alarms across three noise realisations, gated (T6).", "tab:t6_robustness",
-              "lrrrrr", "Pipeline & TP & FP & FN & F1 & FA (h)", body,
-              "NSTDB em noise, seeds 42, 43 and 44, each gated with its own SQI (rodrigues2021 R-peaks, 6\\,dB). Union of lead II and V2 alarms, 101 episodes, 15 records. "
-              "Mean $\\pm$ SD over the three noise seeds; L1, L2: training seed S1. FA: false-alarm hours.")
+              "lrrrr", "Pipeline & TP & FP & FN & F1", body,
+              "NSTDB em noise, seeds 42, 43 and 44, each gated with its own SQI (rodrigues2021 R-peaks, 6\\,dB). Alarms of both leads, each scored against the gold-standard episodes of its own lead; counts pooled over the 26 evaluated record--lead pairs. Precision (P) = TP/(TP+FP); recall (R) = TP/(TP+FN). 101 episodes, 15 records. "
+              "Mean $\\pm$ SD over the three noise seeds; L1, L2: training seed S1.")
     return R, chk, ok
 
 

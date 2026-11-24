@@ -12,7 +12,8 @@ relabel  Condition names in docs/thesis_tables/*.tex: clean -> baseline, noisy -
          expected at least once where listed; afterwards no 'clean' / 'noisy' remains outside file names and labels. Idempotent: rerun after any
          table is regenerated (the generator scripts still write the old words).
 Output: Tasks/final/runs/step7_extra/, docs/RESULTS_FINAL.md (data, ceiling blocks), docs/thesis_tables/T0_*.tex, T5b_gold_standard_ceiling.tex.
-Usage: <repo .venv>/bin/python -u -W ignore fin_step7_data_ceiling.py data|ceiling|relabel"""
+Usage: <repo .venv>/bin/python -u -W ignore fin_step7_data_reference.py data|reference|relabel|relabel_md
+(Renamed 2026-11-24 from fin_step7_data_ceiling.py; the stage "ceiling" is now "reference", the reference-window benchmark.)"""
 import re
 import sys
 import time
@@ -25,7 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))  # the other final driv
 import fin_step7_tier1 as T  # noqa: E402
 import fin_step7_rest as Rr  # noqa: E402
 
-Rr.SCRIPT = "src/scripts/final/fin_step7_data_ceiling.py"
+Rr.SCRIPT = "src/scripts/final/fin_step7_data_reference.py"
 
 P, K = T.P, T.K
 REPO = P.REPO
@@ -40,10 +41,15 @@ ORDER = ["train", "validation", "test", "unused"]
 def tex_write(name, caption, label, colspec, header, body, note):
     Rr.X.tex_write(name, caption, label, colspec, header, body, note)
     f = T.TEX / f"{name}.tex"
-    f.write_text(f.read_text().replace("fin_step7_t10_fig1.py", "fin_step7_data_ceiling.py", 1))
+    f.write_text(f.read_text().replace("fin_step7_t10_fig1.py", "fin_step7_data_reference.py", 1))
 
 
 # ------------------------------------------------------------------ data
+def two(a, b):
+    """A two-line column header without extra packages (user, 2026-11-24: T0 must fit a 6 in text width without \\resizebox)."""
+    return f"\\begin{{tabular}}[c]{{@{{}}c@{{}}}}{a}\\\\{b}\\end{{tabular}}"
+
+
 def data():
     pre = []
     for name, leads, used in (("patch_ecg_unified_ii_lossfix", "II", "L1 lead II model"), ("patch_ecg_unified_v2_lossfix", "V2", "L1 lead V2 model")):
@@ -131,9 +137,10 @@ def data():
     notes = "; ".join(f"fold {k}: validation {g[g.split == 'validation'].records.iloc[0].replace('s', '')}, test {g[g.split == 'test'].records.iloc[0].replace('s', '')}"
                       + (f", unused {g[g.split == 'unused'].records.iloc[0].replace('s', '')}" if (g.split == "unused").any() else "") for k, g in F.groupby("fold"))
     tex_write("T0_fold_data", "Fine-tuning and evaluation data per fold (LTST, 16 records).", "tab:t0_folds",
-              "llrrrrrr", "Fold & Split & Records & Windows & II w/o masked & V2 w/o masked & II episodes & V2 episodes", body,
-              "Windows: 10\\,s segments with both targets (the rows the trainer used); masked record--lead pairs stay in training and are excluded from scoring "
-              "(columns w/o masked). Episodes: gold-standard ST episodes per lead (69 II + 32 V2), none on a masked pair. Record IDs (LTST s-numbers): " + notes.replace("_", "\\_") + ".")
+              "llrrrrrr", "Fold & Split & Records & Windows & " + " & ".join(two(a, b) for a, b in (("II windows", "(scored)"), ("V2 windows", "(scored)"),
+                                                                                                  ("II ischemic", "episodes"), ("V2 ischemic", "episodes"))), body,
+              "Windows: 10\\,s segments with both targets (the rows the trainer used); excluded record--lead pairs stay in training and are not scored "
+              "(the scored columns leave them out). Episodes: gold-standard ischemic episodes per lead (69 II + 32 V2), none on an excluded pair. Record IDs (LTST s-numbers): " + notes.replace("_", "\\_") + ".")
     return ok
 
 
@@ -160,29 +167,29 @@ def ceiling():
     print(line)
     pd.DataFrame([dict(condition="baseline", **met)]).to_csv(OUT / "ceiling_metrics.csv", index=False)
     R5 = pd.read_csv(T.OUT / "T5_alarms_per_seed.csv").query("condition == 'clean'")
-    out = Rr.head("## Gold-standard ceiling (baseline)", "The true window labels (set A: median `.16a` `ee` of each 10 s grid window, anchors 2500k + 2499) through the same "
-                  "FSM and scorer as T5, baseline condition (no noise, no gate), masked pairs excluded, union of II and V2. It is the score of a perfect window-level "
+    out = Rr.head("## Reference-window benchmark (baseline)", "The reference window values (set A: median `.16a` `ee` of each 10 s grid window, anchors 2500k + 2499) through the same "
+                  "FSM and scorer as T5, baseline condition (no noise, no gate), masked pairs excluded. Alarms of both leads, each scored against the gold-standard episodes of its own lead; counts pooled over the 26 evaluated record–lead pairs. Precision (P) = TP/(TP+FP); recall (R) = TP/(TP+FN). It is the score of a perfect window-level "
                   f"estimator under this FSM. Control: equals phase 1's oracle union ({'yes' if ok else 'NO'}).")
-    out += ["| pipeline | TP | FP | FN | precision | recall | F1 | IoU | false-alarm h | duration Se | duration +P | redundant |", "|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|",
-            f"| gold-standard labels | {got[0]} | {got[1]} | {got[2]} | {met['precision']:.3f} | {met['recall']:.3f} | {met['F1']:.3f} | {met['IoU_whole_record']:.3f} | "
-            f"{met['false_hours']:.1f} | {met['sensitivity']:.3f} | {met['PPV_time']:.3f} | {got[3]} |"]
-    for pipe in ("NK-PR", "NK-FP", "L1", "L2"):
+    out += ["| pipeline | TP | FP | FN | precision | recall | F1 | IoU | duration Se | duration +P | redundant |", "|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|",
+            f"| reference window values | {got[0]} | {got[1]} | {got[2]} | {met['precision']:.3f} | {met['recall']:.3f} | {met['F1']:.3f} | {met['IoU_whole_record']:.3f} | "
+            f"{met['sensitivity']:.3f} | {met['PPV_time']:.3f} | {got[3]} |"]
+    for pipe in ("NK-PR", "L1", "L2"):
         q = R5[R5.pipeline == pipe]
         out.append(f"| {pipe} (T5) | {T.pm(q.TP, 1)} | {T.pm(q.FP, 1)} | {T.pm(q.FN, 1)} | {T.pm(q.precision)} | {T.pm(q.recall)} | {T.pm(q.F1)} | {T.pm(q.IoU_whole_record)} | "
-                   f"{T.pm(q.false_hours, 1)} | {T.pm(q.sensitivity)} | {T.pm(q.PPV_time)} | {T.pm(q.Ignored, 1)} |")
+                   f"{T.pm(q.sensitivity)} | {T.pm(q.PPV_time)} | {T.pm(q.Ignored, 1)} |")
     out.append("\nWith the true labels as input, the 1 missed episode and 9 false alarms reflect differences between the FSM on 10 s window medians and "
-               "the way the gold-standard episodes were built; their cause was not examined.")
-    Rr.X.upsert("ceiling", "\n".join(out))
-    body = [f"Gold-standard labels & {got[0]} & {got[1]} & {got[2]} & {met['precision']:.3f} & {met['recall']:.3f} & {met['F1']:.3f} & {met['IoU_whole_record']:.3f} & "
-            f"{met['false_hours']:.1f} & {met['sensitivity']:.3f} & {met['PPV_time']:.3f} & {got[3]}", "MIDRULE"]
-    for pipe in ("NK-PR", "NK-FP", "L1", "L2"):
+               "the way the gold-standard episodes were built; their cause was not examined.")  # unchanged sentence
+    Rr.X.upsert("reference_window", "\n".join(out))
+    body = [f"Reference window values & {got[0]} & {got[1]} & {got[2]} & {met['precision']:.3f} & {met['recall']:.3f} & {met['F1']:.3f} & {met['IoU_whole_record']:.3f} & "
+            f"{met['sensitivity']:.3f} & {met['PPV_time']:.3f} & {got[3]}", "MIDRULE"]
+    for pipe in ("NK-PR", "L1", "L2"):
         q = R5[R5.pipeline == pipe]
         body.append(f"{pipe} & {T.tpm(q.TP, 1)} & {T.tpm(q.FP, 1)} & {T.tpm(q.FN, 1)} & {T.tpm(q.precision)} & {T.tpm(q.recall)} & {T.tpm(q.F1)} & {T.tpm(q.IoU_whole_record)} & "
-                    f"{T.tpm(q.false_hours, 1)} & {T.tpm(q.sensitivity)} & {T.tpm(q.PPV_time)} & {T.tpm(q.Ignored, 1)}")
-    tex_write("T5b_gold_standard_ceiling", "Alarm ceiling: gold-standard window labels through the alarm FSM, baseline condition.", "tab:t5b_ceiling",
-              "lrrrrrrrrrrr", "Estimate & TP & FP & FN & Precision & Recall & F1 & IoU & FA (h) & Dur.\\ Se & Dur.\\ +P & Redundant", body,
-              "Gold-standard labels: median expert ST deviation of each 10\\,s window, through the same PROSE FSM and scorer; baseline condition, no gate; "
-              "union of lead II and V2 alarms, 101 episodes, 15 records, masked pairs excluded. Pipeline rows repeated from Table T5 (baseline). "
+                    f"{T.tpm(q.sensitivity)} & {T.tpm(q.PPV_time)} & {T.tpm(q.Ignored, 1)}")
+    tex_write("T5b_reference_window_benchmark", "Reference-window benchmark: reference window values through the alarm FSM, baseline condition.", "tab:t5b_reference_window",
+              "lrrrrrrrrrr", "Estimate & TP & FP & FN & P & R & F1 & IoU & Dur.\\ Se & Dur.\\ +P & Redundant", body,
+              "Reference window values: median expert ST deviation of each 10\\,s window, through the same PROSE FSM and scorer; baseline condition, no gate. "
+              "Alarms of both leads, each scored against the gold-standard episodes of its own lead; counts pooled over the 26 evaluated record--lead pairs. Precision (P) = TP/(TP+FP); recall (R) = TP/(TP+FN). 101 episodes, 15 records, masked pairs excluded. Pipeline rows repeated from Table T5 (baseline). "
               "L1, L2: mean $\\pm$ SD over three training seeds.")
     return ok
 
@@ -295,8 +302,38 @@ def relabel():
     return ok
 
 
+# ------------------------------------------------------------------ relabel_md (user, 2026-11-24): thesis names in RESULTS_FINAL.md
+MD_REPL = [  # (regex, replacement), applied before the system names; Markdown uses en dashes where the .tex uses "--"
+    (r"\b([Mm])asked record–lead pairs are excluded from all scoring", lambda m: ("E" if m.group(1) == "M" else "e") + "xcluded record–lead pairs are left out of all scoring"),
+    (r"\b([Mm])asked (record–lead pairs|pairs) (?:are )?excluded(?! from)", lambda m: ("E" if m.group(1) == "M" else "e") + f"xcluded {m.group(2)} not scored"),
+    (r"\b([Mm])asked pairs out\b", lambda m: ("E" if m.group(1) == "M" else "e") + "xcluded pairs left out"),
+    (r"\b([Mm])asked\b", lambda m: ("E" if m.group(1) == "M" else "e") + "xcluded"),
+    (r"(?<![\w`/.-])clean(?![\w`/.-])", "baseline"), (r"(?<![\w`/.-])Clean(?![\w`/.-])", "Baseline"),
+    (r"(?<![\w`/.-])noisy(?![\w`/.-])", "artifact"), (r"(?<![\w`/.-])Noisy(?![\w`/.-])", "Artifact"),
+]
+MD_BANNED = re.compile(r"Fiducial-FP|NK-FP|NK-PR|L1sup|L2sup|no PT|head-first|[Mm]asked|Unified v2|[Cc]eiling|FA \(h\)|false-alarm h")
+
+
+def relabel_md():
+    """Thesis names in RESULTS_FINAL.md: the .tex name map (NAMES, via rename_systems) after MD_REPL; comments untouched. Idempotent.
+    Prints every line that still contains a banned term (check b)."""
+    s = T.MD.read_text()
+    out = []
+    for line in s.split("\n"):
+        if not line.startswith("<!--"):
+            for a, b in MD_REPL:
+                line = re.sub(a, b, line)
+        out.append(line)
+    s = rename_systems("\n".join(out)).replace("Chapman--Shaoxing", "Chapman–Shaoxing").replace("record--lead", "record–lead")
+    T.MD.write_text(s)
+    left = [f"{i}: {ln[:160]}" for i, ln in enumerate(s.split("\n"), 1) if MD_BANNED.search(ln) and not ln.startswith("<!--")]
+    print(f"{'PASS' if not left else 'FLAG'}  RESULTS_FINAL.md lines with a banned term: {len(left)}")
+    print("\n".join(left))
+    return True
+
+
 if __name__ == "__main__":
     st = sys.argv[1]
-    ok = {"data": data, "ceiling": ceiling, "relabel": relabel}[st]()
+    ok = {"data": data, "reference": ceiling, "relabel": relabel, "relabel_md": relabel_md}[st]()
     (OUT / (f"DONE_{st}" if ok else f"FAILED_{st}")).write_text(time.strftime("%F %T") + "\n")
     sys.exit(0 if ok else 1)

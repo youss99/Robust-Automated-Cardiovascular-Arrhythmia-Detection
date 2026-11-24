@@ -1,4 +1,4 @@
-% appendix_hyperparams: generated 2026-11-24 03:29:32 by src/scripts/final/fin_step7_appendix.py (VM). Needs \usepackage{booktabs}.
+% appendix_hyperparams: generated 2026-11-24 04:19:37 by src/scripts/final/fin_step7_appendix.py (VM). Needs \usepackage{booktabs}.
 \begin{table}[htbp]
 \centering
 \scriptsize
@@ -10,18 +10,17 @@ Parameter & \multicolumn{2}{c}{Pre-training (Chapman--Shaoxing and CinC 2020)} &
  & Single-lead & Two-lead & Learned-1L (pretrained) & Learned-2L (pretrained) & Learned-1L (supervised-only) & Learned-2L (supervised-only) \\
 \midrule
 \multicolumn{7}{l}{\textit{Architecture}} \\
-Encoder & vanilla\_vit & vanilla\_vit & vanilla\_vit & vanilla\_vit & vanilla\_vit & vanilla\_vit \\
+Encoder & ViT encoder & ViT encoder & ViT encoder & ViT encoder & ViT encoder & ViT encoder \\
 Transformer layers / heads & 6 / 8 & 6 / 8 & 6 / 8 & 6 / 8 & 6 / 8 & 6 / 8 \\
 Model dim.\ / feed-forward dim. & 128 / 512 & 128 / 512 & 128 / 512 & 128 / 512 & 128 / 512 & 128 / 512 \\
 Patch length / stride (samples) & 50 / 50 & 50 / 50 & 50 / 50 & 50 / 50 & 50 / 50 & 50 / 50 \\
 Dropout / head dropout & 0 / 0 & 0 / 0 & 0 / 0 & 0 / 0 & 0 / 0 & 0 / 0 \\
 Shared patch embedding & True & True & True & True & True & True \\
-Input normalisation & RevIN, batch statistics & RevIN, batch statistics & RevIN, batch statistics & RevIN, batch statistics & RevIN, batch statistics & RevIN, batch statistics \\
-Head & PRETRAIN & PRETRAIN & REGRESSION / CLS\_TOKEN & REGRESSION / CLS\_TOKEN & REGRESSION / CLS\_TOKEN & REGRESSION / CLS\_TOKEN \\
+Input normalisation & per-lead standardisation with batch statistics & per-lead standardisation with batch statistics & per-lead standardisation with batch statistics & per-lead standardisation with batch statistics & per-lead standardisation with batch statistics & per-lead standardisation with batch statistics \\
+Head & linear reconstruction head & linear reconstruction head & linear regression head on the CLS token & linear regression head on the CLS token & linear regression head on the CLS token & linear regression head on the CLS token \\
 \midrule
 \multicolumn{7}{l}{\textit{Input}} \\
 Leads & II or V2 (one backbone each) & II, V2 & II or V2 (one model each) & II, V2 & II or V2 (one model each) & II, V2 \\
-Context points & 5000 & 5000 & 5000 & 5000 & 5000 & 5000 \\
 \midrule
 \multicolumn{7}{l}{\textit{Objective}} \\
 Mask ratio & 0.4 & 0.4 & -- & -- & -- & -- \\

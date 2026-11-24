@@ -14,7 +14,7 @@ The scripts that produced `docs/RESULTS_FINAL.md`, `docs/thesis_tables/` and `do
 | `fin_step7_tier1.py` | T1, T5, T7 | repo `.venv` |
 | `fin_step7_t10_fig1.py` | T10, Fig. 1, threshold-sweep figure (`figures` redraws both figures from saved outputs) | repo `.venv` |
 | `fin_step7_rest.py` | T2, T3, T4, T6 (`T2` … `T6`) | repo `.venv` |
-| `fin_step7_data_ceiling.py` | data table, gold-standard ceiling, and `relabel` (condition and system names in the `.tex` files; rerun after regenerating any table) | repo `.venv` |
+| `fin_step7_data_reference.py` | data table, gold-standard ceiling, and `relabel` (condition and system names in the `.tex` files; rerun after regenerating any table) | repo `.venv` |
 | `fin_step7_appendix.py` | appendix tables (`hyperparams`, `per_record`) | repo `.venv` |
 
 Each script's docstring gives its inputs, controls and usage. Long runs were started detached (`setsid nohup … &`).
