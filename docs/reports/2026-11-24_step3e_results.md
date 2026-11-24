@@ -133,3 +133,18 @@ regression metrics. The output is in `Tasks/final/runs/step7_step3e/`.
     pre-training run per backbone.
   - The learning rate of 1e-3 was not tuned for training from scratch. The end-to-end runs reach their best validation loss early and then
     overfit (Narval report); selection on validation loss handles this as specified. Nothing was retrained or tuned after these results.
+
+## LaTeX tables (user, 2026-11-24)
+
+`fin_step7_step3e.py tex` writes two tables from the saved CSVs, with no recomputation. They use the thesis names: Learned-1L/2L (pretrained),
+(supervised-only) and (supervised-only, end-to-end).
+- **`docs/thesis_tables/T11a_supervised_schedule.tex`:** per system:
+  - epochs (head-only + full);
+  - MAE II and V2 (baseline, as T1);
+  - F1 baseline / artifact / gated and FP gated (as T5);
+  - median best epoch (single-lead systems over 30 runs, two-lead over 15).
+- **`docs/thesis_tables/T11b_supervised_schedule_paired.tex`:** the six bootstrap comparisons with ΔF1, ΔFP, ΔMAE II and ΔMAE V2.
+
+Checks:
+- The last two comparisons in T11b are identical to the corresponding 8 rows of T7.
+- The relabel stage leaves every table unchanged (no old names).

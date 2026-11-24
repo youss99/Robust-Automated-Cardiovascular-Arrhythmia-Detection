@@ -11,8 +11,10 @@ S1-S3; next to their twins L1sup / L2sup (20 + 70) and the pretrained L1 / L2. E
   Training: best epoch and best validation loss per run (job_log.txt).
 Controls first (stop the run): this script's path reproduces the stored tier-1 results of the existing pipelines exactly: T5 rows of L1, L2,
 L1sup, L2sup (every seed and condition), their T1 rows, and the T7 rows L1 - L1sup and L2 - L2sup.
-Output: Tasks/final/runs/step7_step3e/ (CSVs, SUMMARY.md, CONTROL.txt, DONE_step3e). RESULTS_FINAL.md and docs/thesis_tables are not written.
-Usage: <repo .venv>/bin/python -u -W ignore fin_step7_step3e.py"""
+Output: Tasks/final/runs/step7_step3e/ (CSVs, SUMMARY.md, CONTROL.txt, DONE_step3e). RESULTS_FINAL.md is not written.
+Stage tex (user, 2026-11-24): docs/thesis_tables/T11a_supervised_schedule.tex (per system) and T11b_supervised_schedule_paired.tex (bootstrap),
+from the saved CSVs only (no recomputation), with the thesis names written directly (relabel leaves them unchanged).
+Usage: <repo .venv>/bin/python -u -W ignore fin_step7_step3e.py [tex]"""
 import re
 import sys
 import time
@@ -175,5 +177,66 @@ def main():
     return True
 
 
+# ------------------------------------------------------------------ LaTeX (stage tex)
+NAME = {"L1": "Learned-1L (pretrained)", "L1sup": "Learned-1L (supervised-only)", "L1supE2E": "Learned-1L (supervised-only, end-to-end)",
+        "L2": "Learned-2L (pretrained)", "L2sup": "Learned-2L (supervised-only)", "L2supE2E": "Learned-2L (supervised-only, end-to-end)"}
+SCHED = {"L1": "20 + 70", "L1sup": "20 + 70", "L1supE2E": "0 + 90", "L2": "20 + 70", "L2sup": "20 + 70", "L2supE2E": "0 + 90"}
+
+
+def tpm(x, d):
+    x = np.asarray(x, float)
+    f = (lambda v: f"{v:.{d}f}".replace("-", "$-$"))
+    return f"{f(x.mean())} $\\pm$ {x.std(ddof=1):.{d}f}"
+
+
+def tex_write(name, caption, label, colspec, header, body, note):
+    lines = [f"% {name}: generated {time.strftime('%F %T')} by src/scripts/final/fin_step7_step3e.py (VM). Needs \\usepackage{{booktabs}}.",
+             "\\begin{table}[htbp]", "\\centering", "\\small", f"\\caption{{{caption}}}", f"\\label{{{label}}}",
+             f"\\begin{{tabular}}{{{colspec}}}", "\\toprule", header + " \\\\", "\\midrule"]
+    lines += ["\\midrule" if row == "MIDRULE" else row + " \\\\" for row in body]
+    lines += ["\\bottomrule", "\\end{tabular}", "", f"\\par\\smallskip\\footnotesize {note}", "\\end{table}", ""]
+    (T.TEX / f"{name}.tex").write_text("\n".join(lines))
+
+
+def tex():
+    if not (OUT / "DONE_step3e").exists():
+        sys.exit("run the scoring first")
+    T1t, R = pd.read_csv(OUT / "T1_regression_per_seed.csv"), pd.read_csv(OUT / "T5_alarms_per_seed.csv")
+    T7t, TR = pd.read_csv(OUT / "T7_paired_bootstrap.csv"), pd.read_csv(OUT / "training_best_epochs.csv")
+    body = []
+    for i, group in enumerate((("L1", "L1sup", "L1supE2E"), ("L2", "L2sup", "L2supE2E"))):
+        if i:
+            body.append("MIDRULE")
+        for p in group:
+            mae = [T1t[(T1t.pipeline == p) & (T1t.lead == L)].MAE for L in T.LEADS]
+            f1 = [R[(R.pipeline == p) & (R.condition == c)].F1 for c in ("clean", "noisy", "gated")]
+            fp = R[(R.pipeline == p) & (R.condition == "gated")].FP
+            modes = [m for m, _ in dict.fromkeys(T.LEARNED[p])]
+            ep = [int(re.search(r"best_row_epoch: (\d+)", (SAVE / f"FIN_{p}_{m}_{s}_fold{k:02d}" / "job_log.txt").read_text()).group(1))
+                  for m in modes for s in T.SEEDS for k in range(1, 6)]
+            body.append(f"{NAME[p]} & {SCHED[p]} & {tpm(mae[0], 4)} & {tpm(mae[1], 4)} & {tpm(f1[0], 3)} & {tpm(f1[1], 3)} & {tpm(f1[2], 3)} & {tpm(fp, 1)} & "
+                        f"{int(np.median(ep))}")
+    tex_write("T11a_supervised_schedule", "Supervised-only training schedule: head-only phase vs end-to-end (T11a).", "tab:t11a_schedule",
+              "lcrrrrrrr", "System & Epochs & MAE II (mV) & MAE V2 (mV) & F1 baseline & F1 artifact & F1 gated & FP gated & Best epoch", body,
+              "Epochs: head-only (frozen encoder) + full-network fine-tuning epochs. Supervised-only, end-to-end: the same runs as supervised-only (data, folds, "
+              "seeds, initial weights, optimizer) except 0 + 90 epochs. MAE: baseline condition, all 10\\,s windows (as Table T1). F1 and FP: union of lead II and V2 "
+              "alarms, 101 ischemic episodes in 15 records (as Table T5); artifact: NSTDB em, seed 42; gated: SQI from rodrigues2021 R-peaks, 6\\,dB. "
+              "Mean $\\pm$ SD over three training seeds. Best epoch: epoch of the lowest validation loss (0--89, head-only epochs included), median over the runs (single-lead systems: 30, lead II and V2 models; two-lead systems: 15).")
+    body = []
+    for t in T7t.itertuples():
+        d = 4 if "MAE" in t.metric else 3 if "F1" in t.metric else 1
+        f = (lambda v, s="": f"{v:{s}.{d}f}".replace("-", "$-$"))
+        m = t.metric.replace("dF1", "$\\Delta$F1").replace("dFP", "$\\Delta$FP").replace("dMAE", "$\\Delta$MAE")
+        a, b = t.comparison.split(" - ")
+        body.append(f"{NAME[a]} $-$ {NAME[b]} & {m} & {f(t.value_a)} & {f(t.value_b)} & {f(t.delta, '+')}{'$^{*}$' if t.excludes_zero else ''} & [{f(t.ci_lo, '+')}, {f(t.ci_hi, '+')}]")
+    tex_write("T11b_supervised_schedule_paired", "Paired differences for the training-schedule comparison, gated, noise seed 42 (T11b).", "tab:t11b_schedule_paired",
+              "llrrrl", "Comparison & Metric & A & B & A $-$ B & 95\\,\\% CI", body,
+              f"Record-clustered paired bootstrap, {T.NB:,} resamples; training seeds averaged inside each resample (as Table T7; the last two comparisons "
+              "repeat Table T7). $\\Delta$MAE: windows the gate keeps, predictions in the artifact condition against baseline labels, excluded record--lead pairs "
+              "not scored. $^{*}$: 95\\,\\% CI excludes zero.")
+    print("wrote", T.TEX / "T11a_supervised_schedule.tex", T.TEX / "T11b_supervised_schedule_paired.tex")
+    return True
+
+
 if __name__ == "__main__":
-    sys.exit(0 if main() else 1)
+    sys.exit(0 if (tex() if sys.argv[1:] == ["tex"] else main()) else 1)
