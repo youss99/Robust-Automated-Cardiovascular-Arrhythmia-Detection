@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Final runs, VM step 5 (docs/instructions_final_results.md, DECISIONS.md): the NeuroKit pipelines, and the SQI gate every pipeline uses.
 
-NK-PR     NeuroKit paper rule on rodrigues2021 delineation: ST = median at J+60 (3 samples clean, 5 noisy) minus the PR-segment median
-          (c20b_paper_rule.paper_beats, unchanged); 10 s segments = median of >= 5 usable beats by J+60 (c13_fp_gap.segments); anchor 2500k + 2500.
+NK-PR     NeuroKit paper rule on rodrigues2021 delineation: ST = median of 5 samples (+-8 ms) at J+60 in every condition minus the PR-segment
+          median (c20b_paper_rule.paper_beats, unchanged, half-width 2; DECISIONS.md 2026-11-24: until then the baseline used 3 samples); 10 s segments = median of >= 5 usable beats by J+60 (c13_fp_gap.segments); anchor 2500k + 2500.
 NK-FP     fixed point on rodrigues2021 R-peaks (phase 1's M2-R code): ST = 5-sample mean at R + b + 60 ms minus the 5-sample mean at R - a;
           segments by the ST point; same anchor. a, b per fold and lead from the DMY beats of the fold's 13 non-test records, DMY beats on
           masked pairs excluded (DECISIONS.md 2026-11-20), nearest clean rodrigues2021 R-peak within 100 ms of the .16a sample,
@@ -16,7 +16,8 @@ NeuroKit grid 2500k + 2500), seeds 42-44; plus the same SQI from .atr peaks at s
 Controls:
   fit   the fit code on phase 1's M2-R record set (the 11 training records, masked pairs in, NeuroKit peaks) reproduces m2r_offsets.csv.
   NK-FP the NK-FP code with NeuroKit peaks and m2r_offsets.csv reproduces the stored M2-R values window by window (clean, seed 42).
-  NK-PR rodrigues2021 NK-PR alarms (clean, noisy, gated 6 dB with rodrigues2021 peaks) through this code equal c20b_paper_rule's stored lists.
+  NK-PR rodrigues2021 NK-PR alarms (noisy, gated 6 dB with rodrigues2021 peaks) through this code equal c20b_paper_rule's stored lists. Clean is
+        not compared since 2026-11-24: c20b's stored clean list used 3 samples, this code uses 5.
 Stages: fit | values <workers> <conds, e.g. clean,noisy42> | summarise.   Output: Tasks/final/runs/step5/.
 Usage: setsid nohup <repo .venv>/bin/python -u -W ignore fin_step5_nk.py <stage> ... > logs/step5_<stage>.log 2>&1 < /dev/null &"""
 import contextlib
@@ -176,7 +177,7 @@ def job(task):
             xs = x[:, lead]
             col = {}
             d = delin("rodrigues2021", cond, rec, lead)
-            st, iso = PR.paper_beats(xs, d, 1 if seed is None else 2)
+            st, iso = PR.paper_beats(xs, d, 2)  # 5 samples in every condition (DECISIONS.md 2026-11-24; was 1 = 3 samples on the baseline signal)
             col["NKPR"] = pad(C13.segments(d.J_plus_60ms.to_numpy(float), np.round(st - iso, 6), start))
             rp = peaks("rodrigues2021", cond, rec, lead)
             if not np.array_equal(np.unique(rp), np.unique(d.r_peak.to_numpy().astype(np.int64))):
@@ -260,7 +261,8 @@ def summarise():
         out(f"NK-FP code with NeuroKit peaks + phase 1's offsets equals the stored M2-R values ({c})", good, f"{len(m)}/{len(ref)} windows")
     # control: NK-PR rodrigues2021 alarms vs c20b's stored lists (clean, noisy, gated6)
     stored = pd.concat([pd.read_csv(PR.PER / f"alarms_{r}.csv") for r in RECS], ignore_index=True).query("detector == 'rodrigues2021'")
-    for cond, vc, gated in (("clean", "clean", False), ("noisy", "noisy42", False), ("gated6", "noisy42", True)):
+    lines.append("SKIP  NK-PR rodrigues2021 alarm list vs c20b_paper_rule's (clean): c20b stored 3 samples, this code 5 (DECISIONS.md 2026-11-24)")
+    for cond, vc, gated in (("noisy", "noisy42", False), ("gated6", "noisy42", True)):
         mine = []
         for (rec, L), g in V[vc][V[vc].nk_window].groupby(["record", "lead"]):
             g = g.sort_values("k")

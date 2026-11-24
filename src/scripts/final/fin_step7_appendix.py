@@ -303,7 +303,7 @@ def pr_loss():
                 if cond == "clean" and rec == "s20011":
                     x = wfdb.rdrecord(str(T.T1.RECORDS_DIR / rec / rec)).p_signal[:, lead]
                     d = pd.read_csv(B.DEL / f"delin_raw_nofilter_rodrigues2021/lead_{lead}/waves_{rec}_lead{lead}.csv")
-                    st, iso = PR.paper_beats(x, d, 1)
+                    st, iso = PR.paper_beats(x, d, 2)  # 5 samples, as step 5 in every condition (DECISIONS.md 2026-11-24)
                     same = np.array_equal(np.isfinite(st) & np.isfinite(iso), use)
                     ok &= same
                     lines.append(f"{'PASS' if same else 'FAIL'}  s20011 {L} baseline: usable test equals paper_beats on the signal ({int(use.sum())} beats)")
