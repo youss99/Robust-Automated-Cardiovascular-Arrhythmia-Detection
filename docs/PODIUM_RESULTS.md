@@ -56,3 +56,74 @@ Each lead's alarms scored against that lead's episodes (69 on II, 32 on V2).
 Differences from the paper's numbers:
 - Fiducial: the paper's rows were scored from segment files that store values such as −0.0999999999999999 mV where the true median is −0.1, so the FSM's threshold tests failed on exact ties (about one episode per condition). The paper's own segment files, rounded to 1e-6 mV, give 67/32/34 (3-sample baseline), 67/43/34 and 64/27/37; the baseline row here uses 5 samples (67/34/34).
 - Learned-1L: S1 of the final (retrained) models, not the published models; the gate is the same `.atr` gate. The baseline counts equal the paper's (75/40/26) by coincidence: the predictions differ (mean |Δ| 0.015 mV II, 0.022 mV V2) and so do redundant alarms and IoU.
+
+<!-- published_folds_nk -->
+## Published folds, NeuroKit gate (final podium configuration)
+
+Generated 2026-11-25 00:26:01 by `src/scripts/final/podium_published_folds.py` (VM). **Final podium configuration** (`docs/DECISIONS.md` 2026-11-24; decided before any result: this is what the podium talk and the corrected CMBEC paper use; thesis outputs are not affected).
+
+**Learned-1L (S1):** pretrained (`_lossfix` backbones), training seed S1, one model per lead, on the **published folds** `cv5_optB_fold01–05` with their published validation sets: POD_L1_lead_{II,V2}_S1_fold01/04/05 (Narval, `docs/reports/2026-11-25_podium_training.md`) and FIN_L1_lead_{II,V2}_S1_fold02/03 (already on the published folders). Everything else as the thesis runs. **Fiducial:** NeuroKit R-peaks and dwt delineation, 5-sample ST level at J+60 minus the PR-segment median, values rounded to 1e-6 mV. **Gate:** the paper's SQI from **NeuroKit R-peaks**, 6 dB, every gated row. Noise: NSTDB `em`, seed 42. Same PROSE FSM and scorer; union of II and V2, 101 episodes (Monitor: 99, copied from the paper); excluded record–lead pairs left out. The published V2 validation sets of folds 1, 4 and 5 hold no V2 gold-standard episode (a property of the published folds).
+
+Controls: Fiducial baseline = RESULTS_NK Phase A: (67, 34, 34) vs (67, 34, 34); Fiducial artifact = RESULTS_NK Phase A: (67, 43, 34) vs (67, 43, 34); Fiducial gated = RESULTS_NK Phase A: (65, 30, 36) vs (65, 30, 36). Inference checks (`Tasks/final/runs/podium/published_folds/CHECKS_infer.txt`): each POD run reproduces its saved test MSE; folds 2–3 predictions equal the FIN S1 predictions; window counts equal the published runs; checkpoints match the copy-back list.
+
+### (a) Detection of ischemic episodes (paper Table 1 layout)
+
+| System | Condition | TP | FP | FN | Redundant | P | R | F1 | paper TP/FP/FN (P / R / F1) |
+|---|---|--:|--:|--:|--:|--:|--:|--:|---|
+| Monitor [1] | baseline | 78 | 66 | 21 | n/a | 0.542 | 0.788 | 0.642 | same |
+|  | artifact | 77 | 171 | 22 | n/a | 0.310 | 0.778 | 0.444 | same |
+|  | gated | 76 | 54 | 23 | n/a | 0.585 | 0.768 | 0.664 | same |
+| Fiducial | baseline | 67 | 34 | 34 | 13 | 0.663 | 0.663 | 0.663 | 66/32/35 (0.673 / 0.653 / 0.663) |
+|  | artifact | 67 | 43 | 34 | 15 | 0.609 | 0.663 | 0.635 | 66/40/35 (0.623 / 0.653 / 0.638) |
+|  | gated | 65 | 30 | 36 | 6 | 0.684 | 0.644 | 0.663 | 64/24/37 (0.727 / 0.634 / 0.677) |
+| Learned-1L (S1) | baseline | 81 | 46 | 20 | 15 | 0.638 | 0.802 | 0.711 | 75/40/26 (0.652 / 0.743 / 0.694) |
+|  | artifact | 79 | 56 | 22 | 59 | 0.585 | 0.782 | 0.669 | 73/57/28 (0.562 / 0.723 / 0.632) |
+|  | gated | 77 | 34 | 24 | 10 | 0.694 | 0.762 | 0.726 | 74/28/27 (0.726 / 0.733 / 0.729) |
+
+### (b) Temporal extent of the alarms (paper Table 2 layout)
+
+Sens. = TPt/(TPt+FNt); PPV = TPt/(TPt+FPt); IoU = TPt/(TPt+FPt+FNt); Cov. = (TPt+FPt)/(TPt+FNt) (paper eq. 4), per record–lead; Cov. merged = each record's II and V2 alarms merged into one timeline (the paper's 1.06 definition, checked in the section above). Paper values in brackets.
+
+| System | Condition | Sens. | PPV | IoU | Cov. | Cov. merged |
+|---|---|--:|--:|--:|--:|--:|
+| Fiducial | artifact | 0.456 (0.455) | 0.725 (0.727) | 0.389 (0.389) | 0.628 (0.627) | 0.625 |
+|  | gated | 0.510 (0.496) | 0.739 (0.721) | 0.432 (0.416) | 0.691 (0.688) | 0.687 |
+| Learned-1L (S1) | artifact | 0.761 (0.644) | 0.682 (0.674) | 0.562 (0.491) | 1.116 (0.955) | 1.007 |
+|  | gated | 0.734 (0.749) | 0.632 (0.618) | 0.514 (0.512) | 1.162 (1.213) | 1.034 (1.06) |
+
+### (c) Gated TP per lead (NeuroKit gate)
+
+Each lead's alarms against that lead's episodes (69 on II, 32 on V2).
+
+| System | II TP | V2 TP | paper V2 |
+|---|--:|--:|---|
+| Fiducial | 60 of 69 | 5 of 32 | 5 of 32 |
+| Learned-1L (S1) | 51 of 69 | 26 of 32 | 22 of 32 |
+
+### (d) Learned-1L (S1) training: best epoch and best validation loss per fold
+
+Epochs 0–89 (0–19 head only, 20–89 full fine-tuning); validation loss = MSE (mV²) on the published validation set. Folds 2 and 3: the reused FIN runs.
+
+| Fold | II run | II best epoch | II best valid loss | V2 run | V2 best epoch | V2 best valid loss |
+|--:|---|--:|--:|---|--:|--:|
+| 1 | POD_L1_lead_II_S1_fold01 | 33 | 0.000760 | POD_L1_lead_V2_S1_fold01 | 19 | 0.000992 |
+| 2 | FIN_L1_lead_II_S1_fold02 | 31 | 0.000231 | FIN_L1_lead_V2_S1_fold02 | 73 | 0.001451 |
+| 3 | FIN_L1_lead_II_S1_fold03 | 50 | 0.001273 | FIN_L1_lead_V2_S1_fold03 | 51 | 0.002584 |
+| 4 | POD_L1_lead_II_S1_fold04 | 29 | 0.000319 | POD_L1_lead_V2_S1_fold04 | 24 | 0.001008 |
+| 5 | POD_L1_lead_II_S1_fold05 | 31 | 0.001537 | POD_L1_lead_V2_S1_fold05 | 30 | 0.001545 |
+
+V2 fold 1 selects epoch 19, the last head-only epoch (as every FIN V2 fold-1 run did); the selection rule is unchanged.
+<!-- /published_folds_nk -->
+
+<!-- published_folds_atr -->
+## Published folds, .atr gate (sensitivity check)
+
+Generated 2026-11-25 00:45:21 by `src/scripts/final/podium_published_folds.py score_atr` (VM). Same as the final section above (Learned-1L S1 on the published folds; Fiducial on NeuroKit delineation, 5 samples, rounded; noise seed 42), except the SQI gate: `.atr` beats at 6 dB instead of NeuroKit R-peaks. Gated rows only.
+
+Controls: Fiducial gated = the existing .atr section: (64, 27, 37) vs (64, 27, 37); Learned-1L baseline = the final section: (81, 46, 20) vs (81, 46, 20); Learned-1L artifact = the final section: (79, 56, 22) vs (79, 56, 22).
+
+| System | TP | FP | FN | Redundant | P | R | F1 | Sens. | PPV | IoU | Cov. | Cov. merged | II TP | V2 TP |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| Fiducial | 64 | 27 | 37 | 7 | 0.703 | 0.634 | 0.667 | 0.498 | 0.715 | 0.415 | 0.696 | 0.693 | 59 of 69 | 5 of 32 |
+| Learned-1L (S1) | 76 | 25 | 25 | 9 | 0.752 | 0.752 | 0.752 | 0.750 | 0.610 | 0.507 | 1.229 | 1.093 | 50 of 69 | 26 of 32 |
+<!-- /published_folds_atr -->
