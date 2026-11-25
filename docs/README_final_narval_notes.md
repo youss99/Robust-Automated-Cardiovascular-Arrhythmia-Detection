@@ -77,3 +77,17 @@ Decision and fixed comparisons: `docs/DECISIONS.md`, 2026-11-24. VM checks: `doc
 4. `bash logs/sbatch_scripts/final_e2e/submit_e2e.sh step3e` (refuses a second submission; job IDs in `submitted_step3e.tsv`).
 5. Report `docs/reports/<date>_step3e_training.md`: commit, job IDs, and one table with each run's best epoch and best validation loss (`job_log.txt`; the epoch column runs 0–89 with no restart). Flag NaN losses, failed jobs and runs far from their peers. Code freeze as before: no commits to `src/core`, `src/patchECG_*.py`, job scripts or fold manifests until every step3e job has started.
 6. Copy back as in "Copy back", with a `SHA256SUMS` file written on Narval before rsync.
+
+## podium: Learned-1L S1 on the published folds (added 2026-11-24)
+
+Podium-only exception, approved in `docs/DECISIONS.md` (2026-11-24). VM dry run: `docs/reports/2026-11-24_podium_dry_run.md` (copy of jobs.csv: `docs/reports/2026-11-24_podium_dry_run_jobs.csv`).
+
+6 jobs, `POD_L1_{lead_II,lead_V2}_S1_fold0{1,4,5}`. Each is its FIN twin `FIN_L1_<mode>_S1_fold0X` with the data folder `phase1_folds/cv5_optB_fold0X` (published folds; H5 already linked by `link_phase1_h5.sh`), its own run ID, and one guard line that stops the job unless the backbone sha256 is the twin's (ii `b15f12ef…`, v2 `a62cb3ec…`). Folds 2 and 3 are not retrained.
+
+1. `git status` clean, pull, record the commit. No training code changed (only new scripts and docs).
+2. Self-test: `.venv/bin/python src/scripts/checks/check_training_paths.py` must print 37/37.
+3. `python3 src/scripts/final/build_podium_sbatches.py` writes `logs/sbatch_scripts/podium/podium/*.sbatch` (6), `jobs.csv` and `submit_podium.sh`. `sha256sum logs/sbatch_scripts/podium/jobs.csv` must be `5c57435ab7dba66e3d2eaf2e4ef934a50b419a6a0b6693d0acb0035ace36c38b`. If any condition fails, stop and report.
+4. `bash logs/sbatch_scripts/podium/submit_podium.sh podium` (refuses a second submission; job IDs in `submitted_podium.tsv`).
+5. Code freeze: no commits to `src/core`, `src/patchECG_*.py`, job scripts or fold manifests until all 6 jobs have started.
+6. Report `docs/reports/<date>_podium_training.md`: commit, job IDs, and per job the resolved config (`params.txt`), seed, backbone path + sha256, best epoch and best validation loss (`job_log.txt`). Flag NaN losses or failed jobs.
+7. Copy back as in "Copy back", with a `SHA256SUMS` file written on Narval before rsync.
