@@ -91,3 +91,17 @@ Podium-only exception, approved in `docs/DECISIONS.md` (2026-11-24). VM dry run:
 5. Code freeze: no commits to `src/core`, `src/patchECG_*.py`, job scripts or fold manifests until all 6 jobs have started.
 6. Report `docs/reports/<date>_podium_training.md`: commit, job IDs, and per job the resolved config (`params.txt`), seed, backbone path + sha256, best epoch and best validation loss (`job_log.txt`). Flag NaN losses or failed jobs.
 7. Copy back as in "Copy back", with a `SHA256SUMS` file written on Narval before rsync.
+
+## pubfolds: remaining pretrained runs on the published folds (added 2026-11-25)
+
+Exception approved in `docs/DECISIONS.md` (2026-11-25). VM dry run: `docs/reports/2026-11-25_pubfolds_dry_run.md` (copy of jobs.csv: `docs/reports/2026-11-25_pubfolds_dry_run_jobs.csv`).
+
+21 jobs: `POD_L1_{lead_II,lead_V2}_{S2,S3}_fold0{1,4,5}` (12, `_lossfix` backbones) and `POD_L2_two_lead_{S1,S2,S3}_fold0{1,4,5}` (9, `patch_ecg_unified_ii_v2_rebuilt`). Each is its FIN twin `FIN_<pipeline>_<mode>_<seed>_fold0X` with the data folder `phase1_folds/cv5_optB_fold0X`, its own run ID, and one guard line that stops the job unless the backbone sha256 is the twin's (ii `b15f12ef…`, v2 `a62cb3ec…`, ii_v2 `f3554f14…`); built exactly like the podium jobs. Not retrained: `POD_L1_*_S1` (podium) and every FIN run on folds 2 and 3.
+
+1. `git status` clean, pull, record the commit. No training code changed (only new scripts and docs).
+2. Self-test: `.venv/bin/python src/scripts/checks/check_training_paths.py` must print 37/37.
+3. `python3 src/scripts/final/build_pubfolds_sbatches.py` writes `logs/sbatch_scripts/pubfolds/pubfolds/*.sbatch` (21), `jobs.csv` and `submit_pubfolds.sh`. `sha256sum logs/sbatch_scripts/pubfolds/jobs.csv` must be `e9c5eedc0251ce3471daa1896362777e9935da4e6b5289527ee16a9ac30bcb82`. If any condition fails, stop and report.
+4. `bash logs/sbatch_scripts/pubfolds/submit_pubfolds.sh pubfolds` (refuses a second submission; job IDs in `submitted_pubfolds.tsv`).
+5. Code freeze: no commits to `src/core`, `src/patchECG_*.py`, job scripts or fold manifests until all 21 jobs have started.
+6. Report `docs/reports/<date>_pubfolds_training.md`: commit, job IDs, and per job the resolved config (`params.txt`), seed, backbone path + sha256, best epoch and best validation loss (`job_log.txt`). Flag NaN losses, failed jobs and runs far from their FIN twin's best validation loss.
+7. Copy back as in "Copy back", with a `SHA256SUMS` file written on Narval before rsync.
